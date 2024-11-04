@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="css/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="/css/register.css">
+</head>
+<body>
+    <!-- <div id="particles-js" class="snow"></div> -->
+
+    <main>
+       <div class="left-side">
+        
+       </div>
+      
+      <div class="right-side">
+        <h3>Login</h3><br><br>
+        <form  id="loginform" method="post" action="./login">
+        
+
+
+        <label for="email">Email address</label>
+        <input id="email" type="text" placeholder="email address" name="email" required>
+        <div id="error1" class="error-message"></div>
+        <label for="password">Password</label>
+        <input
+          id="password"
+          type="password"
+          placeholder="Enter Password"
+          name="password"
+          required />
+          <div id="error2" class="error-message"></div>
+          <%if(locals.message && message.length>0){%>
+            <div class="alert alert-danger text-center">
+              <%=message%>
+            </div>
+          <%}%>
+
+        <button type="submit" class="login-btn">Login</button>
+         <div class="links">
+          <a href="#">Forgot password?</a>
+          <a href="./signup">Do not have an account?</a>
+        </div> 
+      </form>
+      </div>
+    </main>
+
+    <!-- <script>
+      const emailid = document.getElementById("email");
+      const passid = document.getElementById("password");
+      const error1 = document.getElementById("error1");
+      const error2 = document.getElementById("error2");
+      const loginform = document.getElementById("loginform");
+
+      function emailValidateChecking(e) {
+        const emailval = emailid.value;
+        const emailpattern =
+          /^[a-zA-Z0-9._-]+@([a-zA-Z0-9.-]+)\.([a-zA-Z]{2,4})$/;
+
+        if (!emailpattern.test(emailval)) {
+          error1.style.display = "block";
+          error1.innerHTML = "Invalid Format";
+        } else {
+          error1.style.display = "none";
+          error1.innerHTML = "";
+        }
+      }
+
+      function passValidateChecking(e) {
+        const passval = passid.value;
+        if (passval.length < 8) {
+          error2.style.display = "block";
+          error2.innerHTML = "Should contain at least 8 characters";
+        } else {
+          error2.style.display = "none";
+          error2.innerHTML = "";
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+        loginform.addEventListener("submit", function (e) {
+          emailValidateChecking();
+          passValidateChecking();
+
+          if (!emailid || !passid || !error1 || !error2 || !loginform) {
+            console.error("One or more elements not found");
+          }
+
+          if (error1.innerHTML || error2.innerHTML) {
+            e.preventDefault();
+          }
+        });
+      });
+    </script> -->
+
+
+  </body>
+</html> 

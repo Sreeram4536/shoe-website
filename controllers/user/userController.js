@@ -1,4 +1,6 @@
 const User = require('../../models/userSchema')
+const Category = require('../../models/categorySchema')
+const Product = require('../../models/productSchema')
 const env=require('dotenv').config()
 const nodemailer=require('nodemailer')
 const bcrypt = require('bcrypt')
@@ -23,13 +25,31 @@ const loadSignup= async(req,res)=>{
 
 const loadHomepage = async(req,res)=>{
     try {
-       return res.render('user/home') 
+       const user = req.session.user;
+       const categories = await Category.find({isListed:true});
+       let productData = await Product.find({
+        isBlocked:false,
+        category:{$in:categories.map(category=>category._id)},quantity:{$gt:0}
+       })
+         productData.sort((a,b)=>new Date(b.createdOn)-new Date(a.createdOn));
+         productData=productData.slice(0,4);
+
+
+
+       if(user){
+
+        const userData = await User.findById(user);
+        res.render('user/home',{user:userData,products:productData});
+       }else{
+         return res.render('user/home',{products:productData});
+       }
+       
     } catch (error) {
-        console.log("Home page not found");
-        res.status(500).send("Server error",error.message)
-        
+        console.log('Home page not loading',error);
+        res.status(500).send('Server Error')
     }
-} 
+}
+
 
 function generateOtp(){
     return Math.floor(100000+Math.random()*900000).toString();
@@ -237,6 +257,67 @@ const login = async(req,res)=>{
     }
 }
 
+const loadShop = async (req, res) => {
+    try {
+        const products = await Product.find(); // Fetch products from the database
+        res.render('user/shop', { products }); // Pass products to shop.ejs
+    } catch (error) {
+        console.error(error);
+        res.status(500).send("Server Error");
+    }
+};
+
+const loadDetails = async (req, res) => {
+    try {
+        const products = await Product.find(); // Fetch products from the database
+        res.render('user/single', { products }); // Pass products to shop.ejs
+    } catch (error) {
+        console.error(error);
+        res.status(500).send("Server Error");
+    }
+};
+
+
+const getProductDetails = async (req, res) => {
+    try {
+        const productId = req.params.productId;
+        
+        // Fetch product details by ID and populate category details
+        const product = await Product.findById(productId)
+            .populate('category', 'name') // Get the category name (assuming category has a name field)
+            .exec();
+
+        if (!product) {
+            return res.redirect('/pageNotFound');  // Redirect if product is not found
+        }
+
+        // Get related products by the same category
+        const relatedProducts = await Product.find({
+            category: product.category._id,
+            _id: { $ne: product._id }  // Exclude the current product from related products
+        }).limit(4);  // Limit to 4 related products
+
+        // Breadcrumbs for navigation
+        const breadcrumbs = [
+            { name: 'Home', link: '/' },
+            { name: product.category.name, link: `/category/${product.category.name}` },
+            { name: product.productName, link: '' }
+        ];
+
+        // Render product details page
+        res.render('user/single', {
+            product: product,
+            relatedProducts: relatedProducts,
+            breadcrumbs: breadcrumbs,
+            title: product.productName,
+            
+        });
+    } catch (error) {
+        console.error("Error fetching product details:", error);
+        res.redirect('/pageNotFound');
+    }
+};
+
 
 
 
@@ -247,5 +328,8 @@ module.exports={
     verifyOtp,
     resendOtp,
     loadLogin,
-    login
+    login,
+    loadShop,
+    getProductDetails,
+    loadDetails
 }

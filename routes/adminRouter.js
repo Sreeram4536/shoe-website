@@ -1,11 +1,27 @@
 const express=require('express');
 const router = express.Router();
+const multer=require('multer')
+const path=require('path')
 const adminController = require("../controllers/admin/adminController");
 const {userAuth,adminAuth}= require('../middlewares/auth')
 const customerController=require("../controllers/admin/customerController")
 const categoryController=require("../controllers/admin/categoryController")
 const productController=require("../controllers/admin/productController")
-const { uploads } = require("../controllers/admin/productController");
+// const { uploads } = ("../controllers/admin/productController");
+
+// Configure storage for multer
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, path.join(__dirname, '..', 'public', 'uploads', 'product-images'));
+    },
+    filename: function (req, file, cb) {
+        cb(null, `${Date.now()}-${file.originalname}`);
+    }
+});
+
+// Initialize multer
+const uploads = multer({ storage: storage });
+
 
 router.get('/pageerror',adminController.pageerror)
 router.get('/login',adminController.loadLogin)
@@ -30,13 +46,21 @@ router.post("/editCategory/:id",adminAuth,categoryController.editCategory);
 
 //Product management
 router.get("/addProducts",adminAuth,productController.getProductAddPage);
+
+
+router.post("/addProducts",adminAuth,uploads.array("images",4),productController.addProducts);
+router.get("/products",adminAuth,productController.getAllProducts)
+
 // router.post("/addProducts",adminAuth,uploads,productController.addProducts);
-// router.get("/products",adminAuth,productController.getAllProducts)
-router.post("/addProducts",adminAuth,uploads,productController.addProducts);
-router.get("/products",adminAuth,productController.getAllProducts);
+// router.get("/products",adminAuth,productController.getAllProducts);
+
+router.post("/addProductOffer",adminAuth,productController.addProductOffer);
+router.post("/removeProductOffer",adminAuth,productController.removeProductOffer);
+router.get("/blockProduct",adminAuth,productController.blockProduct)
+router.get("/unblockProduct",adminAuth,productController.unblockProduct)
 
 router.get("/editProduct",adminAuth,productController.getEditProduct);
-router.post("/editProduct/:id",adminAuth,productController.editProduct);
+router.post("/editProduct/:id",adminAuth,uploads.array("images",4),productController.editProduct);
 router.post("/deleteImage",adminAuth,productController.deleteSingleImage)
 
 module.exports=router;

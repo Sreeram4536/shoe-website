@@ -49,7 +49,7 @@
                     <div id="otpTimer" class="otp-timer">
                         <span id="timerValue">60</span> seconds remaining
                     </div>
-                    <button type="button" class="btn btn-link mt-3" onclick="resendOTP()">Resend OTP</button>
+                    <button type="button" id="resendBtn" class="btn btn-link mt-3" onclick="resendOTP()">Resend OTP</button>
                 </div>
 
                 <% if (locals.message && message.length > 0) { %>
@@ -74,6 +74,7 @@
 
     let timer = 60;
     let timerInterval;
+    const resendBtn = document.getElementById('resendBtn');
 
     function startTimer() {
         timerInterval = setInterval(() => {
@@ -84,6 +85,7 @@
                 document.getElementById("timerValue").classList.add("expired");
                 document.getElementById("timerValue").textContent = "Expired";
                 document.getElementById("otp").disabled = true;
+                resendBtn.disabled = false;  // Enable resend button when timer expires
             }
         }, 1000);
     }
@@ -132,6 +134,7 @@
         document.getElementById('otp').disabled=false;
         document.getElementById("timerValue").classList.remove("expired");
         startTimer();
+        resendBtn.disabled = true;  // Disable the re
         $.ajax({
             type:'POST',
             url:'resend-otp',

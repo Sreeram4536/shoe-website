@@ -4,6 +4,7 @@ const Product = require('../../models/productSchema')
 const env=require('dotenv').config()
 const nodemailer=require('nodemailer')
 const bcrypt = require('bcrypt')
+const mongoose=require('mongoose')
 
 // const pageNotFound = async(req,res)=>{
 //     try {
@@ -25,6 +26,7 @@ const loadSignup= async(req,res)=>{
 
 const loadHomepage = async(req,res)=>{
     try {
+       
        const user = req.session.user;
        const categories = await Category.find({isListed:true});
        let productData = await Product.find({
@@ -38,15 +40,34 @@ const loadHomepage = async(req,res)=>{
 
        if(user){
 
-        const userData = await User.findById(user);
-        res.render('user/home',{user:userData,products:productData});
+        // const userData = await User.findOne({_id:user.id});
+       const userData = await User.findById(user, 'name');
+        res.render('user/home',{user:userData,products:productData,session: req.session});
        }else{
-         return res.render('user/home',{products:productData});
+         return res.render('user/home',{products:productData,session:req.session});
        }
        
     } catch (error) {
         console.log('Home page not loading',error);
         res.status(500).send('Server Error')
+    }
+}
+
+const logout = async(req,res)=>{
+    try {
+        req.session.destroy((err)=>{
+            if(err){
+            console.log("Session destruction error",err.message);
+            return res.redirect("/pageNotFound")
+            }
+            return res.redirect("/user/login")
+            
+        })
+    } catch (error) {
+
+        console.log("Logout error",error);
+        res.redirect("/pageNotFound")
+        
     }
 }
 
@@ -239,12 +260,18 @@ const login = async(req,res)=>{
             return res.render("user/login",{message:"User is blocked by admin"})
         }
 
+
+        
         const passwordMatch = await bcrypt.compare(password,findUser.password);
         if(!passwordMatch){
             return res.render('user/login',{maessage:"Incorrect password"})
         }
+    
 
         req.session.user = findUser._id;
+        // console.log("after logged:",req.session.user);
+        
+        
         res.redirect('/')
         console.log("logged in")
 
@@ -267,20 +294,24 @@ const loadShop = async (req, res) => {
     }
 };
 
-const loadDetails = async (req, res) => {
-    try {
-        const products = await Product.find(); // Fetch products from the database
-        res.render('user/single', { products }); // Pass products to shop.ejs
-    } catch (error) {
-        console.error(error);
-        res.status(500).send("Server Error");
-    }
-};
+// const loadDetails = async (req, res) => {
+//     try {
+//         const products = await Product.find(); // Fetch products from the database
+//         res.render('user/single', { products }); // Pass products to single.ejs
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).send("Server Error");
+//     }
+// };
 
 
 const getProductDetails = async (req, res) => {
     try {
-        const productId = req.params.productId;
+       
+        const { productId } = req.params;
+        console.log(productId)
+       
+        
         
         // Fetch product details by ID and populate category details
         const product = await Product.findById(productId)
@@ -298,17 +329,17 @@ const getProductDetails = async (req, res) => {
         }).limit(4);  // Limit to 4 related products
 
         // Breadcrumbs for navigation
-        const breadcrumbs = [
-            { name: 'Home', link: '/' },
-            { name: product.category.name, link: `/category/${product.category.name}` },
-            { name: product.productName, link: '' }
-        ];
+        // const breadcrumbs = [
+        //     { name: 'Home', link: '/' },
+        //     { name: product.category.name, link: `/category/${product.category.name}` },
+        //     { name: product.productName, link: '' }
+        // ];
 
         // Render product details page
         res.render('user/single', {
             product: product,
             relatedProducts: relatedProducts,
-            breadcrumbs: breadcrumbs,
+            // // breadcrumbs: breadcrumbs,
             title: product.productName,
             
         });
@@ -331,5 +362,6 @@ module.exports={
     login,
     loadShop,
     getProductDetails,
-    loadDetails
+    logout
+    // loadDetails
 }

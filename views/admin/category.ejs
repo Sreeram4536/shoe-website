@@ -66,8 +66,9 @@
     <header class="card-header text-center mb-3">
       <form action="/admin/category/" method="get" class="d-inline">
         <div class="input-group input-group-sm rounded-pill" style="width: 500px;">
-          <input type="text" class="form-control border-0 rounded-pill" placeholder="Search categories" name="search" />
+          <input type="text" class="form-control border-0 rounded-pill" placeholder="Search categories" name="search" value="<%= search %>"  />
           <button class="btn btn-outline-secondary" type="submit">Search</button>
+          <button type="button" class="btn btn-warning ms-5" onclick="clearSearch()">Clear</button>
         </div>
       </form>
     </header>
@@ -215,7 +216,7 @@
       if (!name) {
         displayErrorMessage("name-error", "Please enter a name");
         isValid = false;
-      } else if (!/^[a-zA-Z\s]+$/.test(name)) {
+      } else if (!/^[a-zA-Z\s]+$/i.test(name)) {
         displayErrorMessage("name-error", "Category name should only contain letters");
         isValid = false;
       }
@@ -328,6 +329,12 @@
         }
         
     }
+
+    
+            function clearSearch(){
+                window.location.href = '/admin/category';
+            }
+       
 
   </script>
 <%- include("../partials/admin/footer") %>

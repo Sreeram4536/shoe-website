@@ -41,6 +41,7 @@
             <div class="input-group input-group-sm border border-1 border-grey rounded-pill mx-auto" style="max-width: 500px;">
                 <input type="text" class="form-control border-0 rounded-pill" placeholder="Search products or brands" name="search">
                 <button class="btn btn-outline-secondary border-0" type="submit">Search</button>
+                <button type="button" class="btn btn-warning ms-5" onclick="clearSearch()">Clear</button>
             </div>
         </form>
     </header>
@@ -207,6 +208,10 @@ function removeOffer(productId) {
         }
     });
 }
+
+function clearSearch(){
+                window.location.href = '/admin/products';
+            }
 
 
 </script>

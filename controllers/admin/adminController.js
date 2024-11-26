@@ -7,6 +7,7 @@ const pageerror = async(req,res)=>{
 }
 
 const loadLogin = (req,res)=>{
+    // console.log("Session admin data:", req.session.admin);
     if(req.session.admin){
         return res.redirect("/admin/dashboard")
     }
@@ -20,7 +21,9 @@ const login = async(req,res)=>{
         if(admin){
             const passwordMatch = bcrypt.compare(password,admin.password);
             if(passwordMatch){
-                req.session.admin=true;
+                // req.session.admin=true;
+                req.session.admin = admin._id; // Store the ObjectId, not a boolean
+                // console.log("Session admin set to:", req.session.admin);
                 return res.redirect("/admin")
             }else{
               return res.redirect('/admin/login')  

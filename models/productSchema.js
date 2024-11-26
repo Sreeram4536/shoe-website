@@ -34,7 +34,7 @@ const productSchema = new mongoose.Schema({
     quantity:{
         type:Number,
         require:true,
-        default:true
+        default:1
     },
     color:{
         type:String,
@@ -54,7 +54,7 @@ const productSchema = new mongoose.Schema({
         required:true,
         default:"Available"
     },
-    
+    // maxQtyPerUser: { type: Number, required: true, default: 5 },
 
     
 },{timestamps:true});

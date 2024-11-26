@@ -1,40 +1,96 @@
 const Category = require("../../models/categorySchema");
 const Product = require('../../models/productSchema')
 
-const categoryInfo= async(req,res)=>{
+// const categoryInfo= async(req,res)=>{
+//     try {
+
+//         const page = parseInt(req.query.page)||1;
+//         const limit=4;
+//         const skip=(page-1)*limit;
+
+//          // Get the search term from the query parameters
+//         const searchTerm = req.query.search || '';
+
+//          // Create a search filter if there's a search term
+//             const searchFilter = searchTerm
+//         ? { name: { $regex: new RegExp(searchTerm, 'i') } } // Case-insensitive search
+//          : {};
+
+//         const categoryData= await Category.find({})
+//         .sort({createdAt:-1})
+//         .skip(skip)
+//         .limit(limit);
+
+//         const totalCategories = await Category.countDocuments();
+//         const totalPages = Math.ceil(totalCategories/limit)
+//         res.render("admin/category",{
+//             cat:categoryData,
+//             currentPage:page,
+//             totalPages:totalPages,
+//             totalCategories:totalCategories,
+//             search: searchTerm, 
+//         })
+        
+//     } catch (error) {
+
+//         console.error(error);
+//         res.redirect("/pageerror")
+        
+//     }
+// }
+
+const categoryInfo = async (req, res) => {
     try {
-
-        const page = parseInt(req.query.page)||1;
-        const limit=4;
-        const skip=(page-1)*limit;
-
-        const categoryData= await Category.find({})
-        .sort({createdAt:-1})
+      // Retrieve the search query if provided
+      const search = req.query.search || "";
+  
+      // Set up pagination variables
+      const page = parseInt(req.query.page) || 1;
+      const limit = 4; // Number of categories per page
+      const skip = (page - 1) * limit;
+  
+      // Fetch categories with search filter and pagination
+      const categoryData = await Category.find({
+        $or: [
+          { name: { $regex: ".*" + search + ".*", $options: "i" } },
+          { description: { $regex: ".*" + search + ".*", $options: "i" } }
+        ]
+      })
+        .sort({ createdAt: -1 })
+        .limit(limit)
         .skip(skip)
-        .limit(limit);
-
-        const totalCategories = await Category.countDocuments();
-        const totalPages = Math.ceil(totalCategories/limit)
-        res.render("admin/category",{
-            cat:categoryData,
-            currentPage:page,
-            totalPages:totalPages,
-            totalCategories:totalCategories
-        })
-        
+        .exec();
+  
+      // Count total categories for pagination
+      const totalCategories = await Category.countDocuments({
+        $or: [
+          { name: { $regex: ".*" + search + ".*", $options: "i" } },
+          { description: { $regex: ".*" + search + ".*", $options: "i" } }
+        ]
+      });
+  
+      // Calculate total pages
+      const totalPages = Math.ceil(totalCategories / limit);
+  
+      // Render the template with data, pagination details, and search term
+      res.render("admin/category", {
+        cat: categoryData,
+        totalPages,
+        currentPage: page,
+        search
+      });
     } catch (error) {
-
-        console.error(error);
-        res.redirect("/pageerror")
-        
+      console.error("Error fetching category data:", error);
+      res.redirect("/pageerror");
     }
-}
+  };
 
 const addCategory = async(req,res)=>{
     const{name,description}=req.body;
     try {
 
-        const existingCategory = await Category.findOne({name});
+        // const existingCategory = await Category.findOne({name});
+        const existingCategory = await Category.findOne({ name: { $regex: new RegExp(`^${name}$`, 'i') } });
         if(existingCategory){
             return res.status(400).json({error:"Category already exists"})
         }

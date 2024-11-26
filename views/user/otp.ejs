@@ -76,7 +76,11 @@
     let timerInterval;
     const resendBtn = document.getElementById('resendBtn');
 
+    // Ensure the resend button is disabled initially
+    resendBtn.disabled = true;
+
     function startTimer() {
+        resendBtn.disabled = true;
         timerInterval = setInterval(() => {
             timer--;
             document.getElementById("timerValue").textContent = timer;
@@ -133,8 +137,9 @@
         timer=60;
         document.getElementById('otp').disabled=false;
         document.getElementById("timerValue").classList.remove("expired");
-        startTimer();
+        
         resendBtn.disabled = true;  // Disable the re
+        startTimer();
         $.ajax({
             type:'POST',
             url:'resend-otp',

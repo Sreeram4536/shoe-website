@@ -1,0 +1,317 @@
+<%- include("../partials/user/header") %>
+
+<style>
+  .card-green {
+    background-color: #ADD8E6;
+  }
+
+  .main {
+    padding: 30px 0;
+  }
+
+  .dashboard-menu {
+    background-color: #cce3e6;
+    border-radius: 10px;
+    padding: 15px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .dashboard-menu .nav-link {
+    font-weight: bold;
+    color: #30683c;
+    transition: box-shadow 0.3s ease;
+  }
+
+  .dashboard-menu .nav-link:hover {
+    color: #00bfff;
+  }
+
+  .card {
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    margin-bottom: 20px;
+  }
+
+  .card-header {
+    background-color: #487379;
+    color: white;
+    border-radius: 10px 10px 0 0;
+  }
+
+  .btn-success {
+    background-color: #577194;
+    border-color: #6bb87d;
+  }
+
+  .btn-success:hover {
+    background-color: #506955;
+  }
+
+  .form-group {
+    margin-bottom: 15px;
+  }
+
+  .required {
+    color: red;
+  }
+
+  @media (max-width: 768px) {
+    .dashboard-menu {
+      padding: 10px;
+    }
+
+    .card {
+      margin-bottom: 15px;
+    }
+  }
+
+  .page-header.breadcrumb-wrap {
+    background-color: #eee2e9;
+    padding: 15px 0;
+  }
+
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    font-family: 'Arial', sans-serif;
+    font-size: 16px;
+    color: #121311;
+  }
+
+  .breadcrumb a {
+    color: #007bff;
+    text-decoration: none;
+    position: relative;
+    margin: 0 5px;
+  }
+
+  .breadcrumb a:hover {
+    color: #0056b3;
+  }
+
+  .breadcrumb span {
+    margin: 0 5px;
+    color: #999;
+  }
+</style>
+
+<main class="main">
+  <div class="page-header breadcrumb-wrap mb-3">
+    <div class="container">
+      <div class="breadcrumb">
+        <a href="/" rel="nofollow">Home</a>
+        <span></span> Profile <span></span> Account
+      </div>
+    </div>
+  </div>
+  <section class="pt-10 pb-10">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-4">
+          <div class="dashboard-menu">
+            <ul class="nav nav-pills nav-stacked">
+              <li class="active">
+                <a href="#dashboard" data-toggle="tab">
+                  <i class="glyphicon glyphicon-cog"></i> Dashboard
+                </a>
+              </li>
+              <li>
+                <a href="#address" data-toggle="tab">
+                  <i class="glyphicon glyphicon-map-marker"></i> My Address
+                </a>
+              </li>
+              <li>
+                <a href="#orders" data-toggle="tab">
+                  <i class="glyphicon glyphicon-shopping-cart"></i> Orders
+                </a>
+              </li>
+              <li>
+                <a href="#track-orders" data-toggle="tab">
+                  <i class="glyphicon glyphicon-credit-card"></i> Wallet Status
+                </a>
+              </li>
+              <li>
+                <a href="#wallet-history" data-toggle="tab">
+                  <i class="glyphicon glyphicon-time"></i> Wallet History
+                </a>
+              </li>
+              <li>
+                <a href="#referal" data-toggle="tab">
+                  <i class="glyphicon glyphicon-gift"></i> Referrals
+                </a>
+              </li>
+              <li>
+                <a href="/logout">
+                  <i class="glyphicon glyphicon-log-out"></i> Logout
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="col-md-8">
+          <div class="tab-content">
+            <div class="tab-pane fade in active" id="dashboard">
+              <div class="panel panel-default">
+                <div class="panel-heading">
+                  <h5 class="panel-title text-center">User Profile</h5>
+                </div>
+                <div class="panel-body text-center">
+                  <h5><%= user.name %></h5>
+                  <p><strong>Phone:</strong><%= user.phone %></p>
+                  <p><strong>Email:</strong><%= user.email %></p>
+                  <a href="/user/change-email" class="btn btn-success btn-sm">Change Email</a>
+                  <a href="/user/change-password" class="btn btn-success btn-sm">Change Password</a>
+                </div>
+              </div>
+            </div>
+
+            <div class="tab-pane fade" id="address">
+              <div class="row">
+                <% if(userAddress){ %>
+                  <% userAddress.address.forEach((address)=>{ %>
+
+                <div class="col-sm-6">
+                  <div class="panel panel-default">
+                    <div class="panel-heading">
+                      <h5 class="panel-title"><%= address.addressType %></h5>
+                    </div>
+                    
+                    <div class="panel-body">
+                      <address>
+                        <%= address.name %><br/>
+                        <%= address.city %><br/>
+                        <%= address.landMark %><br/>
+                        <%= address.state %><br/>
+                        
+                      </address>
+                      <p><%= address.pincode %></p>
+                      <p><%= address.phone %></p>
+                      <p><%= address.altPhone %></p>
+                      <div class="row">
+                        <div class="col-xs-6">
+                          <a href="/user/editAddress?id=<%= address._id %>" class="btn btn-default btn-block">Edit</a>
+                        </div>
+                        <div class="col-xs-6">
+                          <a href="/user/deleteAddress?id=<%= address._id %>" class="btn btn-default btn-block" onclick="return confirm('Are you sure you want to delete this address?')">Delete</a>
+                        </div>
+                      </div>
+                    </div>
+                    
+                  </div>
+                </div>
+                <% }) %><% }else{ %>
+                <div class="col-sm-6">
+                  <div class="panel panel-default">
+                    <div class="panel-heading">
+                      <h5 class="panel-title"></h5>
+                    </div>
+                    <div class="panel-body">
+                      <address>No address</address>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <% } %>
+              <div class="text-center">
+                <a href="/user/addAddress">
+                  <button class="btn btn-primary btn-lg">Add Address</button>
+                </a>
+              </div>
+            </div>
+
+            <div class="tab-pane fade" id="orders">
+              <div class="panel panel-default">
+                <div class="panel-heading">
+                  <h5 class="panel-title">Your Orders</h5>
+                </div>
+                <div class="panel-body">
+                  <div class="table-responsive">
+                    <table class="table">
+                      <thead>
+                        <tr>
+                          <th>Order</th>
+                          <th>Status</th>
+                          <th>Total</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td></td>
+                          <td></td>
+                          <td></td>
+                          <td>
+                            <a href="#" class="btn btn-default btn-sm">View</a>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="tab-pane fade" id="track-orders">
+              <div class="panel panel-default">
+                <div class="panel-heading">
+                  <h5 class="panel-title">Wallet</h5>
+                </div>
+                <div class="panel-body">
+                  <form>
+                    <div class="form-group">
+                      <label for="walletAmount" class="control-label">Amount</label>
+                      <div></div>
+                    </div>
+                    <button type="button" class="btn btn-success">Add Money</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+            <div class="tab-pane fade" id="wallet-history">
+              <div class="panel panel-default">
+                <div class="panel-heading">
+                  <h5 class="panel-title">Wallet History</h5>
+                </div>
+                <div class="panel-body">
+                  <div class="table-responsive">
+                    <table class="table">
+                      <thead>
+                        <tr>
+                          <th>Date</th>
+                          <th>Status</th>
+                          <th>Amount</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td></td>
+                          <td></td>
+                          <td></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="tab-pane fade" id="referal">
+              <div class="panel panel-default">
+                <div class="panel-heading">
+                  <h5 class="panel-title">Referral</h5>
+                </div>
+                <div class="panel-body">
+                  <h6>Refer your friends and earn money!</h6>
+                  <p>Share this link: <strong></strong></p>
+                  <p>Earned: ₹</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+<%- include("../partials/user/footer") %>

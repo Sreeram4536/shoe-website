@@ -7,6 +7,7 @@ const {userAuth,adminAuth}= require('../middlewares/auth')
 const customerController=require("../controllers/admin/customerController")
 const categoryController=require("../controllers/admin/categoryController")
 const productController=require("../controllers/admin/productController")
+const orderController=require("../controllers/admin/orderController")
 // const { uploads } = ("../controllers/admin/productController");
 
 // Configure storage for multer
@@ -62,5 +63,15 @@ router.get("/unblockProduct",adminAuth,productController.unblockProduct)
 router.get("/editProduct",adminAuth,productController.getEditProduct);
 router.post("/editProduct/:id",adminAuth,uploads.array("images",4),productController.editProduct);
 router.post("/deleteImage",adminAuth,productController.deleteSingleImage)
+
+/****ORDER Management */
+
+router.get('/orderList',adminAuth,orderController. listOrders); // View all orders
+router.post('/orders/:orderId/status',adminAuth,orderController. changeOrderStatus); // Change order status
+router.delete('/orders/:orderId/cancel',adminAuth,orderController. cancelOrder); // Cancel an order
+
+router.get('/inventory',adminAuth,orderController. manageInventory); // View and manage inventory
+router.post('/inventory/:productId/update',adminAuth,orderController. updateProductQuantity);
+
 
 module.exports=router;

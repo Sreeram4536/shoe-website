@@ -1,4 +1,4 @@
-const mongoose=required('mongoose');
+const mongoose=require('mongoose');
 const{Schema}=mongoose
 
 const cartSchema= new Schema({
@@ -38,4 +38,4 @@ const cartSchema= new Schema({
 })
 
 const Cart= mongoose.model("Cart",cartSchema)
-module.expoprts=Cart
+module.exports=Cart

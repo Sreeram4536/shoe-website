@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Change Email</title>
+    <!-- Bootstrap 3 CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <style>
+        .mt-80 {
+            margin-top: 80px;
+        }
+
+        .mb-80 {
+            margin-bottom: 80px;
+        }
+
+        .has-error input {
+            border-color: #d9534f;
+        }
+
+        .help-block.text-danger {
+            color: #d9534f;
+        }
+    </style>
+</head>
+<body>
+    <section class="content-main mt-80 mb-80">
+        <div class="panel panel-default col-md-4 col-md-offset-4">
+            <div class="panel-heading text-center">
+                <h4 class="panel-title">Enter Current Email</h4>
+            </div>
+            <div class="panel-body">
+                <form method="post" action="/user/change-email" onsubmit="return validateLoginForm()">
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input class="form-control" name="email" placeholder="Email" type="text" id="email">
+                        <span class="help-block text-danger" id="email-error"></span>
+                    </div>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary btn-block">Verify</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        function validateLoginForm() {
+            const emailInput = document.getElementById('email');
+            const emailError = document.getElementById('email-error');
+            const emailValue = emailInput.value.trim();
+            const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
+
+            if (emailValue === '') {
+                emailError.textContent = 'Please enter your email.';
+                emailInput.classList.add('has-error');
+                return false;
+            } else if (!emailValue.match(emailPattern)) {
+                emailError.textContent = 'Please enter a valid email address';
+                emailInput.classList.add('has-error');
+                return false;
+            } else {
+                emailError.textContent = '';
+                emailInput.classList.remove('has-error');
+                return true;
+            }
+        }
+    </script>
+
+    <!-- Bootstrap 3 JS -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+</body>
+</html>

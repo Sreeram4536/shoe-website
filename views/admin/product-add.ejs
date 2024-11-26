@@ -156,8 +156,8 @@
                                         <img src="" alt="" id="imgView1">
                                                                     <input class="form-control" type="file" name="images" id="input1"
                                                                         accept="image/png, image/jpeg, image/jpg"
-                                                                        multiple onchange="viewImage1(event), viewImage(event, 1)">
-                                                                        <div id="images-error" class="error-message"></div>
+                                                                        multiple onchange="viewImage1(event), viewImage(event, 1),validateImages(event)">
+                                                                        <div id="images-error-1" class="error-message"></div>
                                                                 </div>
                                                                 <div class="image-cropper d-flex align-items-center"
                                                                     style="display:none; width: 300px; height: 200px; margin-bottom: 20px;">
@@ -173,7 +173,8 @@
  
                                                                     <input class="form-control" type="file" name="images" id="input2"
                                                                         accept="image/png, image/jpeg, image/jpg"
-                                                                        onchange="viewImage2(event),viewImage(event, 2)">
+                                                                       multiple onchange="viewImage2(event),viewImage(event, 2).validateImages(event)">
+                                                                       <div id="images-error-2" class="error-message"></div>
                                                                 </div>
                                                                 <div class="image-cropper d-flex align-items-center"
                                                                     style="display:none; width: 300px; height: 200px; margin-bottom: 20px;">
@@ -189,7 +190,8 @@
  
                                                                     <input class="form-control" type="file" name="images" id="input3"
                                                                         accept="image/png, image/jpeg, image/jpg"
-                                                                        onchange="viewImage3(event),viewImage(event, 3)">
+                                                                        multiple onchange="viewImage3(event),viewImage(event, 3),validateImages(event)">
+                                                                        <div id="images-error-3" class="error-message"></div>
                                                                 </div>
                                                                 <div class="image-cropper d-flex align-items-center"
                                                                     style="display:none; width: 300px; height: 200px; margin-bottom: 20px;">
@@ -206,7 +208,8 @@
                                                            
                                                                     <input class="form-control" type="file" name="images" id="input4"
                                                                         accept="image/png, image/jpeg, image/jpg"
-                                                                        onchange="viewImage4(event),viewImage(event, 4)">
+                                                                        multiple onchange="viewImage4(event),viewImage(event, 4),validateImages(event)">
+                                                                        <div id="images-error-4" class="error-message"></div>
                                                                 </div>
                                                                 <div class="image-cropper d-flex align-items-center"
                                                                     style="display:none; width: 300px; height: 200px; margin-bottom: 20px;">
@@ -349,13 +352,24 @@ function viewImage4(event) {
     function handleFileSelect(event, inputIndex) {
         const addedImagesContainer = document.getElementById('addedImagesContainer');
 
+        const files = Array.from(event.target.files);
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+        const errorElement = document.getElementById(`images-error-${inputIndex}`);
+
+        // Clear error message before new validation
+        errorElement.innerText = '';
+
         // Clear only thumbnails of the specific input, not the entire container
         const inputThumbnails = document.querySelectorAll(`.thumbnail[data-input="${inputIndex}"]`);
         inputThumbnails.forEach(thumbnail => thumbnail.remove());
 
-        const files = Array.from(event.target.files);
+        
         
         files.forEach(file => {
+            if (!allowedTypes.includes(file.type)) {
+                errorElement.innerText = 'Only image files (JPEG, PNG, JPG) are allowed.';
+                return;
+            }
             selectedImages.push(file);
 
             // Create a thumbnail container for each selected file
@@ -417,22 +431,16 @@ function viewImage4(event) {
    }
   
   
-           
-  
-  
               if ( parseInt(quantity) < 0) {
                   displayErrorMessage('quantity-error', 'Please enter a valid non-negative quantity.');
                   isValid = false;
               }
   
   
-  
-  
               if (!/^\d+(\.\d{1,2})?$/.test(price) || parseFloat(price) < 0) {
                   displayErrorMessage('regularPrice-error', 'Please enter a valid non-negative price.');
                   isValid = false;
               }
-  
   
   
   

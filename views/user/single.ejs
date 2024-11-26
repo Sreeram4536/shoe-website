@@ -41,17 +41,17 @@ Smartphone Compatible web template, free webdesigns for Nokia, Samsung, LG, Sony
 		<div class="wrapper_top_w3layouts">
 			<div class="header_agileits">
 				<div class="logo inner_page_log">
-					<h1><a class="navbar-brand" href="index.html"><span>Downy</span> <i>Shoes</i></a></h1>
+					<h1><a class="navbar-brand" href="/"><span>Downy</span> <i>Shoes</i></a></h1>
 				</div>
 				<div class="overlay overlay-contentpush">
 					<button type="button" class="overlay-close"><i class="fa fa-times" aria-hidden="true"></i></button>
 
 					<nav>
 						<ul>
-							<li><a href="/" class="active">Home</a></li>
+							<li><a href="../" class="active">Home</a></li>
 							<li><a href="about.html">About</a></li>
 							<li><a href="404.html">Team</a></li>
-							<li><a href="shop.html">Shop Now</a></li>
+							<li><a href="../user/shop">Shop Now</a></li>
 							<li><a href="contact.html">Contact</a></li>
 						</ul>
 					</nav>
@@ -92,7 +92,7 @@ Smartphone Compatible web template, free webdesigns for Nokia, Samsung, LG, Sony
 			<div class="inner_breadcrumb_agileits_w3">
 
 				<ul class="short">
-					<li><a href="/admin">Home</a><i>|</i></li>
+					<li><a href="../user/home">Home</a><i>|</i></li>
 					<li>Single</li>
 				</ul>
 			</div>
@@ -101,6 +101,17 @@ Smartphone Compatible web template, free webdesigns for Nokia, Samsung, LG, Sony
 	</div>
 
 	<!-- //banner -->
+	<nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <% breadcrumbs.forEach(breadcrumb => { %>
+                <% if (breadcrumb.link) { %>
+                    <li class="breadcrumb-item"><a href="<%= breadcrumb.link %>"><%= breadcrumb.name %></a></li>
+                <% } else { %>
+                    <li class="breadcrumb-item active" aria-current="page"><%= breadcrumb.name %></li>
+                <% } %>
+            <% }); %>
+        </ol>
+    </nav>
 	<!-- top Products -->
 	<div class="ads-grid_shop">
 		<div class="shop_inner_inf">
@@ -126,8 +137,8 @@ Smartphone Compatible web template, free webdesigns for Nokia, Samsung, LG, Sony
 			</div>
 			<div class="col-md-8 single-right-left simpleCart_shelfItem">
 				<h3><%= product.productName %></h3>
-				<p><span class="item_price"><%=product.salePrice%></span>
-					<del><%=product.regularPrice%></del>
+				<p><span class="item_price">INR <%=product.salePrice%></span>
+					<del>INR <%=product.regularPrice%></del>
 				</p>
 				<div class="rating1">
 					<ul class="stars">
@@ -230,10 +241,10 @@ Smartphone Compatible web template, free webdesigns for Nokia, Samsung, LG, Sony
 							<div class="single_page">
 								<h6><%= product.productName %></h6>
 								<p><%= product.description %></p>
-								<p class="para">Lorem ipsum dolor sit amet, consectetur adipisicing elPellentesque vehicula augue eget nisl ullamcorper, molestie
+								<!-- <p class="para">Lorem ipsum dolor sit amet, consectetur adipisicing elPellentesque vehicula augue eget nisl ullamcorper, molestie
 									blandit ipsum auctor. Mauris volutpat augue dolor.Consectetur adipisicing elit, sed do eiusmod tempor incididunt
 									ut lab ore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco. labore et dolore
-									magna aliqua.</p>
+									magna aliqua.</p> -->
 							</div>
 						</div>
 						<!--//tab_one-->
@@ -272,7 +283,7 @@ Smartphone Compatible web template, free webdesigns for Nokia, Samsung, LG, Sony
 						<div class="tab3">
 
 							<div class="single_page">
-								<h6>Shoe Rock Vision(SRV) Sneakers (Blue)</h6>
+								<h6><%= product.productName %></h6>
 								<p>Lorem ipsum dolor sit amet, consectetur adipisicing elPellentesque vehicula augue eget nisl ullamcorper, molestie
 									blandit ipsum auctor. Mauris volutpat augue dolor.Consectetur adipisicing elit, sed do eiusmod tempor incididunt
 									ut lab ore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco. labore et dolore
@@ -291,6 +302,7 @@ Smartphone Compatible web template, free webdesigns for Nokia, Samsung, LG, Sony
 			<div class="new_arrivals">
 				<h3>Featured Products</h3>
 				<!-- /womens -->
+				 
 				<div class="col-md-3 product-men women_two">
 					<div class="product-shoe-info shoe">
 						<div class="men-pro-item">
@@ -360,7 +372,7 @@ Smartphone Compatible web template, free webdesigns for Nokia, Samsung, LG, Sony
 									<div class="grid_meta">
 										<div class="product_price">
 											<div class="grid-price ">
-												<span class="money ">$325.00</span>
+												<span class="money ">INR325.00</span>
 											</div>
 										</div>
 										<ul class="stars">

@@ -1,8 +1,14 @@
-const mongoose=required('mongoose');
+const mongoose=require('mongoose');
 const {Schema}= mongoose;
-const {v4:uuidv4}=required('uuid')
+const {v4:uuidv4}=require('uuid')
 
 const orderSchema= new mongoose.Schema({
+    userId:{
+        type:Schema.Types.ObjectId,
+            ref:"User",
+            required:true
+    },
+    
     orderId:{
         type:String,
         default:()=>uuidv4(),

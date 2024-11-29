@@ -552,6 +552,54 @@ const searchProduct = async(req,res)=>{
     }
 }
 
+const sortProducts = async (req, res) => {
+    try {
+        const user = req.session.user;
+        const userData = await User.findOne({_id: user});
+        const order = req.query.order || 'asc'; // Default to ascending
+        const categories = await Category.find({isListed: true});
+        const brands = await Brand.find({isBlocked: false});
+        
+        // Base query
+        const query = {
+            isBlocked: false,
+            category: {$in: categories.map(category => category._id)}
+        };
+
+        // Sort products
+        let products;
+        if (order === 'asc') {
+            products = await Product.find(query).sort({ salePrice: 1 });
+        } else {
+            products = await Product.find(query).sort({ salePrice: -1 });
+        }
+
+        // Pagination
+        const page = parseInt(req.query.page) || 1;
+        const limit = 3;
+        const startIndex = (page - 1) * limit;
+        const endIndex = startIndex + limit;
+        const totalProducts = products.length;
+        const totalPages = Math.ceil(totalProducts / limit);
+        const currentProducts = products.slice(startIndex, endIndex);
+
+        res.render('user/shop', {
+            user: userData,
+            products: currentProducts,
+            category: categories,
+            brand: brands,
+            totalProducts: totalProducts,
+            currentPage: page,
+            totalPages: totalPages,
+            session: req.session,
+            sortOrder: order // Pass the current sort order to maintain state
+        });
+
+    } catch (error) {
+        console.error("Error in sorting products:", error);
+        res.redirect("/pageNotFound");
+    }
+};
 
 
 module.exports={
@@ -567,6 +615,7 @@ module.exports={
     logout,
     filterProduct,
     filterByPrice,
-    searchProduct
+    searchProduct,
+    sortProducts
     // loadDetails
 }

@@ -23,6 +23,7 @@
             color: #d9534f;
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
     <section class="content-main mt-80 mb-80">
@@ -31,7 +32,7 @@
                 <h4 class="panel-title">Enter Current Email</h4>
             </div>
             <div class="panel-body">
-                <form method="post" action="/user/change-email" onsubmit="return validateLoginForm()">
+                <form id="emailChangeForm" method="post" action="/user/change-email">
                     <div class="form-group">
                         <label for="email">Email</label>
                         <input class="form-control" name="email" placeholder="Email" type="text" id="email">
@@ -46,25 +47,76 @@
     </section>
 
     <script>
+        document.getElementById('emailChangeForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (!validateLoginForm()) {
+                return false;
+            }
+
+            try {
+                const formData = new FormData(this);
+                const response = await fetch(this.action, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(Object.fromEntries(formData))
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: data.message,
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.href = data.redirectUrl;
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message
+                    });
+                }
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An unexpected error occurred. Please try again.'
+                });
+            }
+        });
+
         function validateLoginForm() {
             const emailInput = document.getElementById('email');
-            const emailError = document.getElementById('email-error');
             const emailValue = emailInput.value.trim();
             const emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$/;
 
             if (emailValue === '') {
-                emailError.textContent = 'Please enter your email.';
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Validation Error',
+                    text: 'Please enter your email.'
+                });
                 emailInput.classList.add('has-error');
                 return false;
             } else if (!emailValue.match(emailPattern)) {
-                emailError.textContent = 'Please enter a valid email address';
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Validation Error',
+                    text: 'Please enter a valid email address'
+                });
                 emailInput.classList.add('has-error');
                 return false;
-            } else {
-                emailError.textContent = '';
-                emailInput.classList.remove('has-error');
-                return true;
             }
+            
+            emailInput.classList.remove('has-error');
+            return true;
         }
     </script>
 

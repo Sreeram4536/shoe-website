@@ -1,51 +1,81 @@
 <%- include("../partials/user/header") %>
 
-<div class="container">
-    <div class="row">
-        <div class="col-md-8 col-md-offset-2">
-            <div class="panel panel-default">
-                <div class="panel-heading text-center">
-                    <h3>Choose Payment Method</h3>
+<div class="container py-5" style="height: 50vh; margin-top: 50px;">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0 text-center">Order Summary</h3>
                 </div>
-                <div class="panel-body">
-                    <div class="well">
-                        <h4>Delivery Address</h4>
-                        <p>
-                            <strong><%= selectedAddress.name %></strong><br>
-                            <%= selectedAddress.city %>, <%= selectedAddress.state %>, <%= selectedAddress.pincode %><br>
-                            <strong>Landmark:</strong> <%= selectedAddress.landMark %><br>
-                            <strong>Phone:</strong> <%= selectedAddress.phone %>
-                        </p>
+                <div class="card-body">
+                    <!-- Delivery Address Section -->
+                    <div class="mb-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <i class="fas fa-map-marker-alt text-primary me-2"></i>
+                            <h5 class="mb-0">Delivery Address</h5>
+                        </div>
+                        <div class="card border-light bg-light">
+                            <div class="card-body">
+                                <h6 class="text-primary mb-2"><%= selectedAddress.name %></h6>
+                                <p class="mb-1"><%= selectedAddress.city %>, <%= selectedAddress.state %>, <%= selectedAddress.pincode %></p>
+                                <p class="mb-1"><strong>Landmark:</strong> <%= selectedAddress.landMark %></p>
+                                <p class="mb-0"><strong>Phone:</strong> <%= selectedAddress.phone %></p>
+                            </div>
+                        </div>
                     </div>
-                    <form action="/user/place-order" method="POST" class="form-horizontal">
+
+                    <!-- Payment Method Section -->
+                    <form action="/user/place-order" method="POST">
                         <input type="hidden" name="chosenAddress" value="<%= selectedAddress._id %>">
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">Payment Method</label>
-                            <div class="col-sm-9">
-                                <div class="radio">
-                                    <label>
-                                        <input 
-                                            type="radio" 
-                                            name="paymentMethod" 
-                                            value="COD" 
-                                            required> 
-                                        Cash on Delivery
-                                    </label>
-                                </div>
-                                <div class="radio">
-                                    <label>
-                                        <input 
-                                            type="radio" 
-                                            name="paymentMethod" 
-                                            value="Online" 
-                                            required> 
-                                        Online Payment
-                                    </label>
+                        
+                        <div class="mb-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="fas fa-credit-card text-primary me-2"></i>
+                                <h5 class="mb-0">Payment Method</h5>
+                            </div>
+                            <div class="card border-light">
+                                <div class="card-body">
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="radio" name="paymentMethod" value="COD" id="cod" required>
+                                        <label class="form-check-label" for="cod">
+                                            <i class="fas fa-money-bill-wave text-success me-2"></i>
+                                            Cash on Delivery
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="paymentMethod" value="Online" id="online" required>
+                                        <label class="form-check-label" for="online">
+                                            <i class="fas fa-globe text-info me-2"></i>
+                                            Online Payment
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Order Total Section -->
+                        <!-- <div class="card border-light bg-light mb-4">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Subtotal:</span>
+                                    <span>₹</%= totalAmount %></span>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Shipping:</span>
+                                    <span class="text-success">Free</span>
+                                </div>
+                                <hr>
+                                <div class="d-flex justify-content-between fw-bold">
+                                    <span>Total:</span>
+                                    <span>₹<%= totalAmount %></span>
+                                </div>
+                            </div>
+                        </div> -->
+
                         <div class="text-center">
-                            <button type="submit" class="btn btn-success btn-lg">Place Order</button>
+                            <button type="submit" class="btn btn-primary btn-lg px-5">
+                                <i class="fas fa-check-circle me-2"></i>Place Order
+                            </button>
                         </div>
                     </form>
                 </div>

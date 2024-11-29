@@ -50,7 +50,18 @@
     }
 
     .resend-button {
-      margin-top: 10px;
+      margin-top: 15px;
+      color: #007bff;
+      background: none;
+      border: none;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    .resend-button:disabled {
+      color: #6c757d;
+      cursor: not-allowed;
+      text-decoration: none;
     }
   </style>
 </head>
@@ -70,7 +81,7 @@
       <div class="otp-timer-wrapper mt-3">
         <div class="otp-timer" id="otpTimer"></div>
       </div>
-      <button type="button" class="btn btn-link resend-button" onclick="resendOtp()">Resend OTP</button>
+      <button type="button" class="btn btn-link resend-button" id="resendButton" onclick="resendOtp()" disabled>Resend OTP</button>
       <% if(locals.message && message.length>0){ %>
       <div class="alert alert-danger mt-3" ><%= message %></div>
       <% } %>
@@ -100,17 +111,24 @@
 
     function startOtpTimer(){
         const timerElement = document.getElementById('otpTimer');
-        otpTimerInterval=setInterval(function (){
-            const minutes=Math.floor(timer/60);
-            const seconds=timer % 60;
-            timerElement.textContent=`${minutes}:${seconds< 10 ? '0':''}${seconds}`;
-            updateTimerColor((timer/60)*100);
-            if(--timer<0){
+        const resendButton = document.getElementById('resendButton');
+        
+        otpTimerInterval = setInterval(function() {
+            const minutes = Math.floor(timer / 60);
+            const seconds = timer % 60;
+            timerElement.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            updateTimerColor((timer / 60) * 100);
+            
+            if (--timer < 0) {
                 clearInterval(otpTimerInterval);
-                timerElement.textContent='Expired';
-                timerElement.style.backgroundColor = 'red';
+                timerElement.textContent = 'Expired';
+                timerElement.style.backgroundColor = '#dc3545';
+                resendButton.disabled = false; // Enable resend button when timer expires
             }
-        },1000)
+        }, 1000);
+        
+        // Disable resend button when timer starts
+        resendButton.disabled = true;
     }
 
     function initializeOtpTimer(){
@@ -157,38 +175,56 @@
         return false;
     }
 
-    function resendOtp(){
-        clearInterval(otpTimerInterval);
-        timer=60,
-        startOtpTimer();
-        $.ajax({
-            type:'POST',
-            url:'/user/resend-otp',
-            success: function (response){
-                if(response.success){
-                Swal.fire({
-                    icon:'success',
-                    title:"Resend OTP successfull",
-                    showConfirmButton:false,
-                    timer:1500,
-                })
-            }else{
-                Swal.fire({
-                    icon:"error",
-                    title:"Error",
-                    text:"Failed to resend OTP,Please try again."
-                })
-            }
-        },
-        error: function(){
+    function resendOtp() {
+        // Check if timer is still running
+        if (timer > 0) {
             Swal.fire({
-                icon:'error',
-                title:'Error',
-                text:"Failed to resend OTP,Please try again."
-            })
+                icon: 'warning',
+                title: 'Please Wait',
+                text: 'Please wait for the timer to expire before requesting a new OTP'
+            });
+            return;
         }
 
-        })
+        // Disable resend button during request
+        const resendButton = document.querySelector('.resend-button');
+        resendButton.disabled = true;
+
+        $.ajax({
+            type: 'POST',
+            url: '/user/resend-forgot-otp',
+            success: function(response) {
+                if (response.success) {
+                    // Reset and start timer
+                    clearInterval(otpTimerInterval);
+                    timer = 60;
+                    startOtpTimer();
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success',
+                        text: 'OTP has been resent to your email',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                } else {
+                    resendButton.disabled = false;
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: response.message || 'Failed to resend OTP'
+                    });
+                }
+            },
+            error: function() {
+                resendButton.disabled = false;
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Failed to resend OTP. Please try again.'
+                });
+            }
+        });
     }
 
   </script>

@@ -20,10 +20,17 @@
     font-weight: bold;
     color: #30683c;
     transition: box-shadow 0.3s ease;
+    padding: 10px 15px;
+    margin-bottom: 5px;
+    display: block;
+    text-decoration: none;
   }
 
-  .dashboard-menu .nav-link:hover {
-    color: #00bfff;
+  .dashboard-menu .nav-link:hover,
+  .dashboard-menu li.active .nav-link {
+    background-color: #487379;
+    color: white;
+    border-radius: 5px;
   }
 
   .card {
@@ -32,10 +39,22 @@
     margin-bottom: 20px;
   }
 
-  .card-header {
+  .panel {
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    background-color: white;
+  }
+
+  .panel-heading {
     background-color: #487379;
     color: white;
     border-radius: 10px 10px 0 0;
+    padding: 15px;
+  }
+
+  .panel-body {
+    padding: 20px;
   }
 
   .btn-success {
@@ -55,16 +74,7 @@
     color: red;
   }
 
-  @media (max-width: 768px) {
-    .dashboard-menu {
-      padding: 10px;
-    }
-
-    .card {
-      margin-bottom: 15px;
-    }
-  }
-
+  /* Breadcrumb styles */
   .page-header.breadcrumb-wrap {
     background-color: #eee2e9;
     padding: 15px 0;
@@ -81,7 +91,6 @@
   .breadcrumb a {
     color: #007bff;
     text-decoration: none;
-    position: relative;
     margin: 0 5px;
   }
 
@@ -89,13 +98,63 @@
     color: #0056b3;
   }
 
-  .breadcrumb span {
-    margin: 0 5px;
-    color: #999;
+  /* Order styles */
+  .order-details {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+  }
+
+  .order-product {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .order-product img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 5px;
+    margin-right: 15px;
+  }
+
+  .order-status {
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: bold;
+  }
+
+  .status-delivered { background: #d4edda; color: #155724; }
+  .status-processing { background: #fff3cd; color: #856404; }
+  .status-cancelled { background: #f8d7da; color: #721c24; }
+
+  /* Tab pane styles */
+  .tab-pane {
+    display: none;
+  }
+
+  .tab-pane.active.show,
+  .tab-pane.active.in {
+    display: block;
+  }
+
+  @media (max-width: 768px) {
+    .dashboard-menu {
+      padding: 10px;
+    }
+
+    .card {
+      margin-bottom: 15px;
+    }
   }
 </style>
 
 <main class="main">
+  <!-- Breadcrumb section -->
   <div class="page-header breadcrumb-wrap mb-3">
     <div class="container">
       <div class="breadcrumb">
@@ -104,9 +163,11 @@
       </div>
     </div>
   </div>
+
   <section class="pt-10 pb-10">
     <div class="container">
       <div class="row">
+        <!-- Left sidebar menu -->
         <div class="col-md-4">
           <div class="dashboard-menu">
             <ul class="nav nav-pills nav-stacked">
@@ -148,119 +209,145 @@
             </ul>
           </div>
         </div>
+
+        <!-- Right content area -->
         <div class="col-md-8">
           <div class="tab-content">
+            <!-- Dashboard Tab -->
             <div class="tab-pane fade in active" id="dashboard">
-              <div class="panel panel-default">
+              <div class="panel">
                 <div class="panel-heading">
                   <h5 class="panel-title text-center">User Profile</h5>
                 </div>
                 <div class="panel-body text-center">
                   <h5><%= user.name %></h5>
-                  <p><strong>Phone:</strong><%= user.phone %></p>
-                  <p><strong>Email:</strong><%= user.email %></p>
+                  <p><strong>Phone:</strong> <%= user.phone %></p>
+                  <p><strong>Email:</strong> <%= user.email %></p>
                   <a href="/user/change-email" class="btn btn-success btn-sm">Change Email</a>
                   <a href="/user/change-password" class="btn btn-success btn-sm">Change Password</a>
                 </div>
               </div>
             </div>
 
+            <!-- Address Tab -->
             <div class="tab-pane fade" id="address">
               <div class="row">
                 <% if(userAddress){ %>
                   <% userAddress.address.forEach((address)=>{ %>
-
-                <div class="col-sm-6">
-                  <div class="panel panel-default">
-                    <div class="panel-heading">
-                      <h5 class="panel-title"><%= address.addressType %></h5>
-                    </div>
-                    
-                    <div class="panel-body">
-                      <address>
-                        <%= address.name %><br/>
-                        <%= address.city %><br/>
-                        <%= address.landMark %><br/>
-                        <%= address.state %><br/>
-                        
-                      </address>
-                      <p><%= address.pincode %></p>
-                      <p><%= address.phone %></p>
-                      <p><%= address.altPhone %></p>
-                      <div class="row">
-                        <div class="col-xs-6">
-                          <a href="/user/editAddress?id=<%= address._id %>" class="btn btn-default btn-block">Edit</a>
+                    <div class="col-sm-6">
+                      <div class="panel">
+                        <div class="panel-heading">
+                          <h5 class="panel-title"><%= address.addressType %></h5>
                         </div>
-                        <div class="col-xs-6">
-                          <a href="/user/deleteAddress?id=<%= address._id %>" class="btn btn-default btn-block" onclick="return confirm('Are you sure you want to delete this address?')">Delete</a>
+                        <div class="panel-body">
+                          <address>
+                            <%= address.name %><br/>
+                            <%= address.city %><br/>
+                            <%= address.landMark %><br/>
+                            <%= address.state %>
+                          </address>
+                          <p>PIN: <%= address.pincode %></p>
+                          <p>Phone: <%= address.phone %></p>
+                          <p>Alt Phone: <%= address.altPhone %></p>
+                          <div class="row">
+                            <div class="col-xs-6">
+                              <a href="/user/editAddress?id=<%= address._id %>" class="btn btn-success btn-block">Edit</a>
+                            </div>
+                            <div class="col-xs-6">
+                              <a href="/user/deleteAddress?id=<%= address._id %>" class="btn btn-danger btn-block" 
+                                 onclick="return confirm('Are you sure you want to delete this address?')">Delete</a>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
-                    
-                  </div>
-                </div>
-                <% }) %><% }else{ %>
-                <div class="col-sm-6">
-                  <div class="panel panel-default">
-                    <div class="panel-heading">
-                      <h5 class="panel-title"></h5>
-                    </div>
-                    <div class="panel-body">
-                      <address>No address</address>
+                  <% }) %>
+                <% } else { %>
+                  <div class="col-sm-12">
+                    <div class="panel">
+                      <div class="panel-body text-center">
+                        <p>No addresses found</p>
+                      </div>
                     </div>
                   </div>
-                </div>
+                <% } %>
               </div>
-              <% } %>
-              <div class="text-center">
-                <a href="/user/addAddress">
-                  <button class="btn btn-primary btn-lg">Add Address</button>
-                </a>
+              <div class="text-center mt-3">
+                <a href="/user/addAddress" class="btn btn-primary btn-lg">Add Address</a>
               </div>
             </div>
 
+            <!-- Orders Tab -->
             <div class="tab-pane fade" id="orders">
-              <div class="panel panel-default">
+              <div class="panel">
                 <div class="panel-heading">
                   <h5 class="panel-title">Your Orders</h5>
                 </div>
                 <div class="panel-body">
-                  <div class="table-responsive">
-                    <table class="table">
-                      <thead>
-                        <tr>
-                          <th>Order</th>
-                          <th>Status</th>
-                          <th>Total</th>
-                          <th>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td></td>
-                          <td></td>
-                          <td></td>
-                          <td>
-                            <a href="#" class="btn btn-default btn-sm">View</a>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
+                  <% if (orders && orders.length > 0) { %>
+                    <% orders.forEach(order => { %>
+                      <div class="order-details">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                          <h6>Order #<%= order.orderId %></h6>
+                          <span class="order-status status-<%= order.status.toLowerCase() %>">
+                            <%= order.status %>
+                          </span>
+                        </div>
+                        
+                        <% order.orderedItems.forEach(item => { %>
+                          <div class="order-product">
+                            <img src="/uploads/product-images/<%= item.product.productImage[0] %>" alt="<%= item.product.productName %>">
+                            <div>
+                              <h6><%= item.product.productName %></h6>
+                              <p class="mb-1">Quantity: <%= item.quantity %></p>
+                              <p class="mb-0">Price: ₹<%= item.price %></p>
+                            </div>
+                          </div>
+                        <% }) %>
+                        
+                        <div class="mt-3">
+                          <p class="mb-1"><strong>Delivery Address:</strong></p>
+                          <% if (order.deliveryAddress) { %>
+                            <p class="mb-1"><%= order.deliveryAddress.name %></p>
+                            <p class="mb-1"><%= order.deliveryAddress.city %></p>
+                            <p class="mb-1"><%= order.deliveryAddress.state %></p>
+                            <p class="mb-1">PIN: <%= order.deliveryAddress.pincode %></p>
+                          <% } else { %>
+                            <p class="mb-1">Address not found</p>
+                          <% } %>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mt-3">
+                          <p class="mb-0"><strong>Order Total:</strong> ₹<%= order.finalAmount %></p>
+                          <p class="mb-0"><strong>Ordered On:</strong> <%= new Date(order.createdOn).toLocaleDateString() %></p>
+                        </div>
+                      </div>
+                    <% }) %>
+                  <% } else { %>
+                    <div class="text-center py-4">
+                      <p>No orders found</p>
+                      <a href="/shop" class="btn btn-primary">Start Shopping</a>
+                    </div>
+                  <% } %>
                 </div>
               </div>
             </div>
 
+            <!-- Other tabs with similar structure -->
+            <!-- Wallet Status Tab -->
             <div class="tab-pane fade" id="track-orders">
-              <div class="panel panel-default">
+              <div class="panel">
                 <div class="panel-heading">
                   <h5 class="panel-title">Wallet</h5>
                 </div>
                 <div class="panel-body">
                   <form>
                     <div class="form-group">
-                      <label for="walletAmount" class="control-label">Amount</label>
-                      <div></div>
+                      <label for="walletAmount">Amount</label>
+                      <div class="input-group">
+                        <span class="input-group-addon">₹</span>
+                        <input type="number" class="form-control" id="walletAmount">
+                      </div>
                     </div>
                     <button type="button" class="btn btn-success">Add Money</button>
                   </form>
@@ -268,8 +355,9 @@
               </div>
             </div>
 
+            <!-- Wallet History Tab -->
             <div class="tab-pane fade" id="wallet-history">
-              <div class="panel panel-default">
+              <div class="panel">
                 <div class="panel-heading">
                   <h5 class="panel-title">Wallet History</h5>
                 </div>
@@ -284,11 +372,7 @@
                         </tr>
                       </thead>
                       <tbody>
-                        <tr>
-                          <td></td>
-                          <td></td>
-                          <td></td>
-                        </tr>
+                        <!-- Add wallet history data here -->
                       </tbody>
                     </table>
                   </div>
@@ -296,15 +380,16 @@
               </div>
             </div>
 
+            <!-- Referral Tab -->
             <div class="tab-pane fade" id="referal">
-              <div class="panel panel-default">
+              <div class="panel">
                 <div class="panel-heading">
                   <h5 class="panel-title">Referral</h5>
                 </div>
                 <div class="panel-body">
                   <h6>Refer your friends and earn money!</h6>
-                  <p>Share this link: <strong></strong></p>
-                  <p>Earned: ₹</p>
+                  <p>Share this link: <strong>[Referral Link]</strong></p>
+                  <p>Earned: ₹0</p>
                 </div>
               </div>
             </div>
@@ -314,4 +399,35 @@
     </div>
   </section>
 </main>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tabLinks = document.querySelectorAll('[data-toggle="tab"]');
+    const tabPanes = document.querySelectorAll('.tab-pane');
+    
+    tabLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Remove active class from all tabs and panes
+            tabLinks.forEach(l => l.parentElement.classList.remove('active'));
+            tabPanes.forEach(p => {
+                p.classList.remove('in', 'active');
+                p.classList.add('fade');
+            });
+            
+            // Add active class to clicked tab
+            this.parentElement.classList.add('active');
+            
+            // Show corresponding pane
+            const targetId = this.getAttribute('href');
+            const targetPane = document.querySelector(targetId);
+            if (targetPane) {
+                targetPane.classList.add('in', 'active');
+            }
+        });
+    });
+});
+</script>
+
 <%- include("../partials/user/footer") %>

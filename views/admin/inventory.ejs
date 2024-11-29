@@ -5,38 +5,206 @@
 <head>
     <title>Inventory Management</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .quantity-input {
+            width: 120px !important;
+            border-radius: 20px;
+            text-align: center;
+        }
+        .status-badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+        .status-available {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status-out {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .card {
+            border: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-radius: 15px;
+        }
+        .card-header {
+            border-radius: 15px 15px 0 0 !important;
+        }
+        .table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+        .table td {
+            vertical-align: middle;
+        }
+        .action-btn {
+            padding: 5px 10px;
+            border-radius: 15px;
+            transition: all 0.3s;
+        }
+        .action-btn:hover {
+            transform: translateY(-2px);
+        }
+    </style>
 </head>
 <body>
-<div class="container mt-5">
-    <h1>Inventory Management</h1>
-    <table class="table table-striped">
-        <thead>
-        <tr>
-            <th>Product Name</th>
-            <th>Quantity</th>
-            <th>Status</th>
-            <th>Price</th>
-            <th>Actions</th>
-        </tr>
-        </thead>
-        <tbody>
-        <% products.forEach(product => { %>
-            <tr>
-                <td><%= product.productName %></td>
-                <td>
-                    <!-- Form to update quantity -->
-                    <form action="/admin/inventory/<%= product._id %>/update" method="POST" class="d-inline">
-                        <input type="number" name="quantity" value="<%= product.quantity %>" class="form-control form-control-sm" style="width: 80px;" required>
-                        <button type="submit" class="btn btn-sm btn-success mt-2">Update</button>
-                    </form>
-                </td>
-                <td><%= product.status %></td>
-                <td>₹<%= product.salePrice %></td>
-            </tr>
-        <% }); %>
-        </tbody>
-    </table>
-</div>
-<%- include("../partials/admin/footer") %>
+    <div class="container-fluid mt-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h3 class="mb-0">Inventory Management</h3>
+                <div>
+                    <button class="btn btn-light rounded-pill" onclick="refreshTable()">
+                        <i class="fas fa-sync-alt me-1"></i> Refresh
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="inventoryTable" class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Product Name</th>
+                                <th>Current Stock</th>
+                                <th>Status</th>
+                                <th>Price</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% products.forEach(product => { %>
+                                <tr data-product-id="<%= product._id %>">
+                                    <td><%= product.productName %></td>
+                                    <td>
+                                        <input type="number" 
+                                               class="form-control quantity-input" 
+                                               value="<%= product.quantity %>" 
+                                               min="0"
+                                               data-original="<%= product.quantity %>"
+                                               data-product-id="<%= product._id %>">
+                                    </td>
+                                    <td>
+                                        <span class="status-badge <%= product.status === 'Available' ? 'status-available' : 'status-out' %>">
+                                            <%= product.status %>
+                                        </span>
+                                    </td>
+                                    <td>₹<%= product.salePrice %></td>
+                                    <td>
+                                        <a href="/admin/editProduct?id=<%= product._id %>" 
+                                           class="btn btn-warning action-btn" 
+                                           title="Edit Product">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        $(document).ready(function() {
+            // Initialize DataTable
+            const table = $('#inventoryTable').DataTable({
+                pageLength: 25,
+                order: [[0, 'asc']],
+                columnDefs: [
+                    { targets: [1, 4], orderable: false }
+                ]
+            });
+
+            // Handle quantity change with debounce
+            let timeoutId;
+            $('.quantity-input').on('input', function() {
+                const input = $(this);
+                const productId = input.data('product-id');
+                const newQuantity = parseInt(input.val());
+                const originalQuantity = parseInt(input.data('original'));
+
+                // Clear any existing timeout
+                clearTimeout(timeoutId);
+
+                // Set a new timeout
+                timeoutId = setTimeout(() => {
+                    if (newQuantity < 0) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Invalid Quantity',
+                            text: 'Quantity cannot be negative',
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 3000
+                        });
+                        input.val(originalQuantity);
+                        return;
+                    }
+
+                    updateQuantity(productId, newQuantity, input);
+                }, 500); // Wait for 500ms after the user stops typing
+            });
+
+            // Function to update quantity
+            function updateQuantity(productId, quantity, input) {
+                $.ajax({
+                    url: `/admin/inventory/${productId}/update`,
+                    method: 'POST',
+                    data: { quantity: quantity },
+                    success: function(response) {
+                        // Show a subtle toast notification
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Updated!',
+                            text: 'Quantity updated successfully',
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 1500
+                        });
+
+                        // Update status badge
+                        const statusBadge = input.closest('tr').find('.status-badge');
+                        const newStatus = quantity > 0 ? 'Available' : 'Out of Stock';
+                        statusBadge.text(newStatus);
+                        statusBadge.removeClass('status-available status-out')
+                            .addClass(quantity > 0 ? 'status-available' : 'status-out');
+
+                        // Update original value
+                        input.data('original', quantity);
+                    },
+                    error: function(xhr) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error!',
+                            text: 'Failed to update quantity',
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 3000
+                        });
+                        input.val(input.data('original'));
+                    }
+                });
+            }
+
+            // Refresh table function
+            window.refreshTable = function() {
+                location.reload();
+            }
+        });
+    </script>
 </body>
 </html>

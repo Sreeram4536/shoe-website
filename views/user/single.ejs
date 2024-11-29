@@ -32,7 +32,178 @@ Smartphone Compatible web template, free webdesigns for Nokia, Samsung, LG, Sony
 	<link href="//fonts.googleapis.com/css?family=Montserrat:100i,200,200i,300,300i,400,400i,500,500i,600,600i,700,700i,800"
 	    rel="stylesheet">
 	<link href="//fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i,800" rel="stylesheet">
-	
+	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+	<style>
+		.product-details-container {
+			padding: 20px;
+			background: #fff;
+			border-radius: 8px;
+			box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+		}
+		
+		.product-title {
+			font-size: 24px;
+			font-weight: 600;
+			color: #333;
+			margin-bottom: 20px;
+		}
+		
+		.price-container {
+			display: flex;
+			align-items: center;
+			gap: 12px;
+		}
+		
+		.current-price {
+			font-size: 28px;
+			font-weight: 700;
+			color: #2c3e50;
+		}
+		
+		.original-price {
+			font-size: 18px;
+			color: #999;
+		}
+		
+		.discount-badge {
+			background: #28a745;
+			color: white;
+			padding: 4px 8px;
+			border-radius: 4px;
+			font-size: 14px;
+		}
+		
+		.rating-container {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+		}
+		
+		.stars {
+			color: #ffc107;
+		}
+		
+		.stars .filled {
+			color: #ffc107;
+		}
+		
+		.rating-text {
+			color: #666;
+			font-size: 14px;
+		}
+		
+		.cart-section {
+			margin: 25px 0;
+		}
+		
+		.add-to-cart-btn {
+			background: #3498db;
+			color: white;
+			border: none;
+			padding: 12px 25px;
+			border-radius: 5px;
+			font-size: 16px;
+			cursor: pointer;
+			transition: background 0.3s ease;
+			width: 100%;
+			max-width: 300px;
+		}
+		
+		.add-to-cart-btn:hover {
+			background: #2980b9;
+		}
+		
+		.out-of-stock-btn {
+			background: #e74c3c;
+			color: white;
+			border: none;
+			padding: 12px 25px;
+			border-radius: 5px;
+			font-size: 16px;
+			width: 100%;
+			max-width: 300px;
+		}
+		
+		.social-share-section {
+			border-top: 1px solid #eee;
+			padding-top: 20px;
+			margin-top: 20px;
+		}
+		
+		.share-title {
+			font-size: 16px;
+			color: #666;
+			margin-bottom: 15px;
+		}
+		
+		.social-icons {
+			display: flex;
+			gap: 15px;
+			padding: 0;
+			list-style: none;
+		}
+		
+		.social-icons a {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			width: 40px;
+			height: 40px;
+			border-radius: 50%;
+			color: white;
+			transition: transform 0.3s ease;
+		}
+		
+		.social-icons a:hover {
+			transform: translateY(-3px);
+		}
+		
+		.facebook-share { background: #3b5998; }
+		.twitter-share { background: #1da1f2; }
+		.instagram-share { background: #e1306c; }
+		.linkedin-share { background: #0077b5; }
+		
+		/* Responsive Styles */
+		@media (max-width: 768px) {
+			.product-title {
+				font-size: 20px;
+			}
+		
+			.current-price {
+				font-size: 24px;
+			}
+		
+			.original-price {
+				font-size: 16px;
+			}
+		
+			.social-icons {
+				gap: 10px;
+			}
+		
+			.social-icons a {
+				width: 35px;
+				height: 35px;
+			}
+		}
+		
+		@media (max-width: 576px) {
+			.product-details-container {
+				padding: 15px;
+			}
+		
+			.price-container {
+				flex-direction: column;
+				align-items: flex-start;
+				gap: 8px;
+			}
+		
+			.social-icons {
+				justify-content: center;
+			}
+		}
+		</style>
+
 </head>
 
 <body>
@@ -136,95 +307,77 @@ Smartphone Compatible web template, free webdesigns for Nokia, Samsung, LG, Sony
 				</div>
 			</div>
 			<div class="col-md-8 single-right-left simpleCart_shelfItem">
-				<h3><%= product.productName %></h3>
-				<p><span class="item_price">INR <%=product.salePrice%></span>
-					<del>INR <%=product.regularPrice%></del>
-				</p>
-				<div class="rating1">
-					<ul class="stars">
-						<li><a href="#"><i class="fa fa-star" aria-hidden="true"></i></a></li>
-						<li><a href="#"><i class="fa fa-star" aria-hidden="true"></i></a></li>
-						<li><a href="#"><i class="fa fa-star" aria-hidden="true"></i></a></li>
-						<li><a href="#"><i class="fa fa-star-half-o" aria-hidden="true"></i></a></li>
-						<li><a href="#"><i class="fa fa-star-o" aria-hidden="true"></i></a></li>
-					</ul>
-				</div>
-				<div class="description">
-					<h5>Check delivery, payment options and charges at your location</h5>
-					<form action="#" method="post">
-						<input type="text" value="Enter pincode" onfocus="this.value = '';" onblur="if (this.value == '') {this.value = 'Enter pincode';}"
-						    required="">
-						<input type="submit" value="Check">
-					</form>
-				</div>
-				<div class="color-quality">
-					<div class="color-quality-right">
-						<h5>quantity :</h5>
-						<select id="country1" onchange="change_country(this.value)" class="frm-field required sect">
-								<option value="null">1 Qty</option>
-								<option value="null">2 Qty</option> 
-								<option value="null">3 Qty</option>					
-								<option value="null">4 Qty</option>								
-							</select>
+				<div class="product-details-container">
+					<!-- Product Title -->
+					<h3 class="product-title"><%= product.productName %></h3>
+					
+					<!-- Price Section -->
+					<div class="price-container mb-4">
+						<span class="current-price">₹<%=product.salePrice%></span>
+						<del class="original-price">₹<%=product.regularPrice%></del>
+						<span class="discount-badge">
+							<%= Math.round(((product.regularPrice - product.salePrice) / product.regularPrice) * 100) %>% OFF
+						</span>
+					</div>
+			
+					<!-- Rating Section -->
+					<div class="rating-container mb-4">
+						<div class="stars">
+							<i class="fa fa-star filled"></i>
+							<i class="fa fa-star filled"></i>
+							<i class="fa fa-star filled"></i>
+							<i class="fa fa-star-half-o"></i>
+							<i class="fa fa-star-o"></i>
+						</div>
+						<span class="rating-text">(4.3/5)</span>
+					</div>
+			
+					<!-- Add to Cart Section -->
+					<div class="cart-section mb-4">
+						<% if (product.quantity > 0) { %>
+							<form onsubmit="return addToCart(event, '<%= product._id %>')" class="cart-form">
+								<input type="hidden" name="product_id" value="<%= product._id %>">
+								<button type="submit" class="add-to-cart-btn">
+									<i class="fa fa-shopping-cart"></i> Add to Cart
+								</button>
+							</form>
+						<% } else { %>
+							<button class="out-of-stock-btn" disabled>
+								<i class="fa fa-times-circle"></i> Out of Stock
+							</button>
+						<% } %>
+					</div>
+			
+					<!-- Social Share Section -->
+					<div class="social-share-section">
+						<h5 class="share-title">Share This Product</h5>
+						<ul class="social-icons">
+							<li>
+								<a href="#" class="facebook-share">
+									<i class="fa fa-facebook"></i>
+								</a>
+							</li>
+							<li>
+								<a href="#" class="twitter-share">
+									<i class="fa fa-twitter"></i>
+								</a>
+							</li>
+							<li>
+								<a href="#" class="instagram-share">
+									<i class="fa fa-instagram"></i>
+								</a>
+							</li>
+							<li>
+								<a href="#" class="linkedin-share">
+									<i class="fa fa-linkedin"></i>
+								</a>
+							</li>
+						</ul>
 					</div>
 				</div>
-				<!-- <div class="occasional">
-					<h5>Types :</h5>
-					<div class="colr ert">
-						<label class="radio"><input type="radio" name="radio" checked=""><i></i>Casual Shoes</label>
-					</div>
-					<div class="colr">
-						<label class="radio"><input type="radio" name="radio"><i></i>Sneakers </label>
-					</div>
-					<div class="colr">
-						<label class="radio"><input type="radio" name="radio"><i></i>Formal Shoes</label>
-					</div>
-					<div class="clearfix"> </div>
-				</div> -->
-				<div class="occasion-cart">
-					<div class="shoe single-item single_page_b">
-						<form action="#" method="post">
-							<input type="hidden" name="cmd" value="_cart">
-							<input type="hidden" name="add" value="1">
-							<input type="hidden" name="shoe_item" value="Chikku Loafers">
-							<input type="hidden" name="amount" value="405.00">
-							<input type="submit" name="submit" value="Add to cart" class="button add">
-
-							<a href="#" data-toggle="modal" data-target="#myModal1"></a>
-						</form>
-
-					</div>
-
-				</div>
-				<ul class="social-nav model-3d-0 footer-social social single_page">
-					<li class="share">Share On : </li>
-					<li>
-						<a href="#" class="facebook">
-							<div class="front"><i class="fa fa-facebook" aria-hidden="true"></i></div>
-							<div class="back"><i class="fa fa-facebook" aria-hidden="true"></i></div>
-						</a>
-					</li>
-					<li>
-						<a href="#" class="twitter">
-							<div class="front"><i class="fa fa-twitter" aria-hidden="true"></i></div>
-							<div class="back"><i class="fa fa-twitter" aria-hidden="true"></i></div>
-						</a>
-					</li>
-					<li>
-						<a href="#" class="instagram">
-							<div class="front"><i class="fa fa-instagram" aria-hidden="true"></i></div>
-							<div class="back"><i class="fa fa-instagram" aria-hidden="true"></i></div>
-						</a>
-					</li>
-					<li>
-						<a href="#" class="pinterest">
-							<div class="front"><i class="fa fa-linkedin" aria-hidden="true"></i></div>
-							<div class="back"><i class="fa fa-linkedin" aria-hidden="true"></i></div>
-						</a>
-					</li>
-				</ul>
-
 			</div>
+
+
 			<div class="clearfix"> </div>
 			<!--/tabs-->
 			<div class="responsive_tabs">
@@ -808,6 +961,47 @@ Smartphone Compatible web template, free webdesigns for Nokia, Samsung, LG, Sony
 	</script>
 	<!-- //end-smoth-scrolling -->
 	<script type="text/javascript" src="/js/bootstrap-3.1.1.min.js"></script>
+	<script>
+		function addToCart(event, productId) {
+			event.preventDefault();
+			
+			fetch(`/user/cart/add/${productId}`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				credentials: 'same-origin'
+			})
+			.then(response => response.json())
+			.then(data => {
+				if (data.success) {
+					Swal.fire({
+						icon: 'success',
+						title: 'Success',
+						text: data.message,
+						showConfirmButton: false,
+						timer: 1500
+					});
+				} else {
+					Swal.fire({
+						icon: 'error',
+						title: 'Error',
+						text: data.message || 'Failed to add product to cart'
+					});
+				}
+			})
+			.catch(error => {
+				console.error('Error:', error);
+				Swal.fire({
+					icon: 'error',
+					title: 'Error',
+					text: 'Something went wrong while adding to cart!'
+				});
+			});
+		
+			return false;
+		}
+	</script>
 
 
 </body>

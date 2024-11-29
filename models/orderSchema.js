@@ -43,7 +43,7 @@ const orderSchema= new mongoose.Schema({
     },
     address:{
         type:Schema.Types.ObjectId,
-        ref:"User",
+        ref:"Address",
         required:true
     },
     invoiceDate:{

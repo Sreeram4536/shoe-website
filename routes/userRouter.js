@@ -33,6 +33,7 @@ router.get('/product/:productId',userController.getProductDetails);
 router.get('/user/filter',userAuth,userController.filterProduct);
 router.get("/user/filterPrice",userAuth,userController.filterByPrice);
 router.post("/user/search",userAuth,userController.searchProduct)
+router.get('/user/sort', userAuth, userController.sortProducts);
 
 /*CART MANAGEMENT*/
 // router.post('/user/cart/:productId', userAuth, cartController.addToCart);
@@ -47,10 +48,10 @@ router.post("/user/search",userAuth,userController.searchProduct)
 // router.post('/user/cart/update/:productId', userAuth, cartController.updateQuantity);
 
 
-router.post('/user/cart/add/:productId', userAuth, cartController.addToCart); // Add product to cart
+router.post('/user/cart/add/:product_id', userAuth, cartController.addToCart); // Add product to cart
 router.get('/user/cart', userAuth, cartController.viewCart); // View cart items
-router.post('/user/cart/remove/:productId', userAuth, cartController.removeFromCart); // Remove product from cart
-router.post('/user/cart/update', userAuth, cartController.updateCartQuantity); // Update product quantity in cart
+router.post('/user/cart/remove', userAuth, cartController.removeFromCart); // Remove product from cart
+router.post('/user/cart/update', userAuth, cartController.updateQuantity); // Update product quantity in cart
 router.get('/user/checkout',userAuth,cartController.checkoutPage)
 router.post('/user/payment',userAuth,cartController.paymentPage)
 router.post('/user/place-order',userAuth,cartController.placeOrder);
@@ -79,6 +80,10 @@ router.post("/user/update-email",userAuth,profileController.updateEmail)
 router.get("/user/change-password",userAuth,profileController.changePassword)
 router.post("/user/change-password",userAuth,profileController.changePasswordValid)
 router.post("/user/verify-changepassword-otp",userAuth,profileController.verifyChangePassOtp);
+router.post("/user/resend-changepassword-otp", userAuth, profileController.resendChangePasswordOtp);
+router.post("/user/resend-email-otp", userAuth, profileController.resendEmailOtp);
+router.get("/user/new-email", userAuth, profileController.newEmailPage);
+router.post("/user/new-email", userAuth, profileController.updateNewEmail);
 
 /*************ADDRESS MANAGEMENT************ */
 
@@ -88,6 +93,8 @@ router.get("/user/editAddress",userAuth,profileController.editAddress);
 router.post("/user/editAddress",userAuth,profileController.postEditAddress);
 router.get("/user/deleteAddress",userAuth,profileController.deleteAddress)
 
-
+// Add this new route
+router.get("/user/change-email-otp", userAuth, profileController.changeEmailOtpPage)
+router.get("/user/change-password-otp", userAuth, profileController.changePasswordOtpPage);
 
 module.exports= router;

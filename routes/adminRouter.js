@@ -60,9 +60,10 @@ router.post("/removeProductOffer",adminAuth,productController.removeProductOffer
 router.get("/blockProduct",adminAuth,productController.blockProduct)
 router.get("/unblockProduct",adminAuth,productController.unblockProduct)
 
-router.get("/editProduct",adminAuth,productController.getEditProduct);
+router.get("/editProduct", adminAuth, productController.getEditProduct);
 router.post("/editProduct/:id",adminAuth,uploads.array("images",4),productController.editProduct);
 router.post("/deleteImage",adminAuth,productController.deleteSingleImage)
+// router.get('/products/edit/:productId', adminAuth, productController.editProduct);
 
 /****ORDER Management */
 
@@ -72,6 +73,8 @@ router.delete('/orders/:orderId/cancel',adminAuth,orderController. cancelOrder);
 
 router.get('/inventory',adminAuth,orderController. manageInventory); // View and manage inventory
 router.post('/inventory/:productId/update',adminAuth,orderController. updateProductQuantity);
+router.get('/orders/:orderId/details', adminAuth,orderController.getOrderDetails);
+router.get('/orders/:orderId/detail', adminAuth, orderController.orderDetailPage);
 
 
 module.exports=router;

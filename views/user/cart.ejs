@@ -133,63 +133,210 @@
 		</div>
 		<!-- //banner_inner -->
 	</div>
-    <div class="container my-5">
-        <h1 class="text-center">Your Cart</h1>
+	<div class="container py-5">
+		<div class="row">
+			<div class="col-lg-8 mx-auto">
+				<div class="card shadow">
+					<div class="card-header bg-primary text-white text-center">
+						<h3 class="mb-0">Your Cart</h3>
+					</div>
+					<div class="card-body">
+						<% if ( cart.items.length ===0 ) { %>
+							<!-- Display when the cart is empty -->
+							<div class="text-center py-5">
+								<p class="fs-4 text-muted">Your cart is empty.</p>
+								<a href="/user/shop" class="btn btn-primary">Start Shopping</a>
+							</div>
+						<% } else { %>
+							<!-- Display cart items -->
+							<% cart.items.forEach(item => { %>
+								<% if (item.productId) { %>
+									<div class="d-flex align-items-center mb-3 border-bottom pb-3" id="cart-item-<%= item.productId._id %>">
+										<img src="/uploads/product-images/<%= item.productId.productImage[0] %>" class="img-thumbnail rounded me-3" style="width: 100px; height: 100px;" alt="<%= item.productId.productName %>">
+										<div class="flex-grow-1">
+											<h5 class="mb-1"><%= item.productId.productName %></h5>
+											<p class="mb-1 text-muted">Price: INR <strong><%= item.price %></strong></p>
+											<button class="btn btn-outline-danger btn-sm remove-item" data-product-id="<%= item.productId._id %>">
+												<i class="fas fa-trash-alt"></i> Remove
+											</button>
+										</div>
+										<div class="ms-3">
+											<input type="number" class="form-control quantity-input" 
+												data-product-id="<%= item.productId._id %>" 
+												value="<%= item.quantity %>" 
+												min="1" max="<%= item.productId.quantity %>" required>
+										</div>
+										<div class="ms-3 text-end">
+											<p class="mb-0">Total:</p>
+											<p class="mb-0 text-success fw-bold">INR <%= item.quantity * item.price %></p>
+										</div>
+									</div>
+								<% } else { %>
+									<div class="alert alert-warning" role="alert">
+										Product details not available for one or more items.
+									</div>
+								<% } %>
+							<% }); %>
+							<div class="text-end mt-4">
+								<h4 class="fw-bold">Total Price: INR <span class="text-primary"><%= totalCartPrice %></span></h4>
+								<a href="/user/checkout" class="btn btn-success btn-lg mt-2">Proceed to Checkout</a>
+							</div>
+						<% } %>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+	<!-- Include SweetAlert2 -->
+	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+	
+	<script>
+		// Unified function to handle SweetAlert messages
+		function showAlert(type, title, message) {
+			Swal.fire({
+				icon: type,
+				title: title,
+				text: message,
+				showConfirmButton: type === 'error', // Show confirm button only for errors
+				timer: type === 'success' ? 1500 : undefined // Auto close only for success
+			}).then(() => {
+				if (type === 'success') {
+					location.reload();
+				}
+			});
+		}
+		
+		// Function to add item to cart
+		function addToCart(event, productId) {
+    event.preventDefault();
+    
+    fetch(`/user/cart/add/${productId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        credentials: 'same-origin' // Add this to ensure cookies/session are sent
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: data.message,
+                showConfirmButton: false,
+                timer: 1500
+            });
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.message || 'Failed to add product to cart'
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Something went wrong while adding to cart!'
+        });
+    });
 
-        <% if (cartItems.length === 0) { %>
-            <div class="alert alert-warning text-center mt-4">Your cart is empty!<%= message %></div>
-        <% } else { %>
-            <form action="/user/cart/update" method="POST">
-				<table class="table table-bordered table-striped mt-4">
-					<thead class="table-dark">
-						<tr>
-							<th>Product</th>
-							<th>Price</th>
-							<th>Quantity</th>
-							<th>Total</th>
-							<th>Actions</th>
-						</tr>
-					</thead>
-					<tbody>
-						<% cartItems.forEach((item, index) => { %>
-							<tr>
-								<td>
-									<img src="/uploads/product-images/<%= item.productId.productImage[0] %>" alt="<%= item.productId.productName %>" style="width: 50px; height: 50px;">
-									<span><%= item.productId.productName %></span>
-								</td>
-								<td>₹<%= item.productId.salePrice || item.productId.regularPrice %></td>
-								<td>
-									<!-- Quantity input -->
-									<input type="hidden" name="productId[]" value="<%= item.productId._id %>">
-									<input type="number" name="quantity[]" value="<%= item.quantity %>" min="1" max="<%= item.productId.quantity %>" class="form-control w-50">
-								</td>
-								<td>₹<%= item.totalPrice %></td>
-								<td>
-									<!-- Remove button -->
-									<form action="/user/cart/remove/<%= item.productId._id %>" method="POST" class="d-inline">
-										<button type="submit" class="btn btn-danger btn-sm">Remove</button>
-									</form>
-								</td>
-							</tr>
-						<% }); %>
-					</tbody>
-				</table>
-			
-				<!-- Single update button -->
-				<button type="submit" class="btn btn-primary">Update Cart</button>
-			</form>
-			
-        <% } %>
+    return false;
+}
+		// Function to handle quantity updates
+		function updateQuantity(productId, newQuantity) {
+			fetch('/user/cart/update', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({
+					product_id: productId,
+					quantity: newQuantity
+				})
+			})
+			.then(response => response.json())
+			.then(data => {
+				if (data.success) {
+					showAlert('success', 'Success', data.message);
+				} else {
+					showAlert('error', 'Error', data.message);
+				}
+			})
+			.catch(error => {
+				showAlert('error', 'Error', 'Something went wrong!');
+			});
+		}
+		
+		// Function to remove item from cart
+		function removeFromCart(productId) {
+			fetch('/user/cart/remove', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({ productId })
+			})
+			.then(response => {
+				if (response.ok) {
+					// Remove the item from the UI
+					document.getElementById(`cart-item-${productId}`).remove();
+		
+					// Check if the cart is empty
+					const cartItems = document.querySelectorAll('.d-flex.align-items-center.mb-3.border-bottom.pb-3');
+					if (cartItems.length === 0) {
+						const cartBody = document.querySelector('.card-body');
+						cartBody.innerHTML = `
+							<div class="text-center py-5">
+								<p class="fs-4 text-muted">Your cart is empty.</p>
+								<a href="/shop" class="btn btn-primary">Start Shopping</a>
+							</div>
+						`;
+					}
+					showAlert('success', 'Success', 'Item removed from cart');
+				} else {
+					showAlert('error', 'Error', 'Failed to remove item');
+				}
+			})
+			.catch(error => {
+				showAlert('error', 'Error', 'Something went wrong!');
+			});
+		}
+		
+		// Add event listeners when document is ready
+		document.addEventListener('DOMContentLoaded', function() {
+			// Quantity input event listeners
+			document.querySelectorAll('.quantity-input').forEach(input => {
+				input.addEventListener('change', function() {
+					const productId = this.getAttribute('data-product-id');
+					const newQuantity = parseInt(this.value);
+					updateQuantity(productId, newQuantity);
+				});
+			});
+		
+			// Remove item event listeners
+			document.querySelectorAll('.remove-item').forEach(button => {
+				button.addEventListener('click', function() {
+					const productId = this.getAttribute('data-product-id');
+					removeFromCart(productId);
+				});
+			});
+		});
+	
+	</script>
 
-        <div class="d-flex justify-content-between align-items-center mt-4">
-            <h3>Total: ₹<%= totalAmount %></h3>
-            <% if (cartItems.length > 0) { %>
-                <a href="/user/checkout" class="btn btn-success">Proceed to Checkout</a>
-            <% } %>
-        </div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+    
 
 	<%- include("../partials/user/footer") %>
 </body>

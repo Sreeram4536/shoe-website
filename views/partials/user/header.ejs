@@ -66,19 +66,20 @@ Smartphone Compatible web template, free webdesigns for Nokia, Samsung, LG, Sony
 
 					<nav>
 						<ul>
-							<li><a href="user/home" class="active">Home</a></li>
+							<li><a href="/" class="active">Home</a></li>
 							<li><a href="about.html">About</a></li>
 							<!-- <li><a href="user/sig">Team</a></li> -->
-							<li><a href="user/shop">Shop Now</a></li>
+							<li><a href="/user/shop">Shop Now</a></li>
 							<li><a href="contact.html">Contact</a></li>
 							
 							
 								<% if ((session && session.user) || (session && session.google)) { %>
-									<li><a href="user/userProfile">Profile</a></li>
-									<li><a href="user/logout">Logout</a></li>
+									<li><a href="/user/userProfile">Profile</a></li>
+									<li><a href="/user/logout">Logout</a></li>
+									<li><a href="/user/orders">Orders</a></li>
 								<% } else { %>
-									<li><a href="user/signup">Signup</a></li>
-									<li><a href="user/login">Login</a></li>
+									<li><a href="/user/signup">Signup</a></li>
+									<li><a href="/user/login">Login</a></li>
 								<% } %>
 						</ul>
 					</nav>

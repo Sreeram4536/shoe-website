@@ -239,7 +239,7 @@ const userProfile = async(req,res) => {
 const changeEmail = async(req,res)=>{
     try {
 
-        res.render("user/change-email")
+        res.render("user/change-email",{session:req.session})
         
     } catch (error) {
         res.redirect("/pageNotFound")

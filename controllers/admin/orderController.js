@@ -1,5 +1,6 @@
 const Order = require('../../models/orderSchema');
 const Product = require('../../models/productSchema');
+const Address = require('../../models/addressSchema');
 
 
 const listOrders = async (req, res) => {
@@ -120,43 +121,43 @@ const manageInventory = async (req, res) => {
 };
 
 // Update product quantity
-const updateProductQuantity = async (req, res) => {
-    try {
-        const { productId } = req.params;
-        const { quantity } = req.body;
+// const updateProductQuantity = async (req, res) => {
+//     try {
+//         const { productId } = req.params;
+//         const { quantity } = req.body;
 
-        if (quantity < 0) {
-            return res.status(400).json({
-                success: false,
-                message: 'Quantity cannot be negative'
-            });
-        }
+//         if (quantity < 0) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message: 'Quantity cannot be negative'
+//             });
+//         }
 
-        const product = await Product.findById(productId);
-        if (!product) {
-            return res.status(404).json({
-                success: false,
-                message: 'Product not found'
-            });
-        }
+//         const product = await Product.findById(productId);
+//         if (!product) {
+//             return res.status(404).json({
+//                 success: false,
+//                 message: 'Product not found'
+//             });
+//         }
 
-        product.quantity = quantity;
-        product.status = quantity > 0 ? 'Available' : 'Out of Stock';
-        await product.save();
+//         product.quantity = quantity;
+//         product.status = quantity > 0 ? 'Available' : 'Out of Stock';
+//         await product.save();
 
-        res.status(200).json({
-            success: true,
-            message: 'Quantity updated successfully',
-            newStatus: product.status
-        });
-    } catch (error) {
-        console.error('Error updating product quantity:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Internal Server Error'
-        });
-    }
-};
+//         res.status(200).json({
+//             success: true,
+//             message: 'Quantity updated successfully',
+//             newStatus: product.status
+//         });
+//     } catch (error) {
+//         console.error('Error updating product quantity:', error);
+//         res.status(500).json({
+//             success: false,
+//             message: 'Internal Server Error'
+//         });
+//     }
+// };
 
 const getOrderDetails = async (req, res) => {
     try {
@@ -183,15 +184,40 @@ const orderDetailPage = async (req, res) => {
         const { orderId } = req.params;
         const order = await Order.findById(orderId)
             .populate('userId', 'name email')
-            .populate('orderedItems.product')
-            .populate('address');
+            .populate('orderedItems.product');
 
         if (!order) {
             return res.redirect('/admin/orderList');
         }
 
+        const orderObj = order.toObject();
+
+        // Find the delivery address
+        const addressDoc = await Address.findOne(
+            { 
+                userId: order.userId._id,
+                "address._id": order.address  // Look for the specific address ID within the address array
+            },
+            {
+                "address.$": 1  // Project only the matched address from the array
+            }
+        );
+
+        if (addressDoc && addressDoc.address && addressDoc.address[0]) {
+            orderObj.deliveryAddress = {
+                addressType: addressDoc.address[0].addressType,
+                name: addressDoc.address[0].name,
+                city: addressDoc.address[0].city,
+                landMark: addressDoc.address[0].landMark,
+                state: addressDoc.address[0].state,
+                pincode: addressDoc.address[0].pincode,
+                phone: addressDoc.address[0].phone,
+                altPhone: addressDoc.address[0].altPhone
+            };
+        }
+
         res.render('admin/orderDetail', { 
-            order,
+            order: orderObj,
             title: 'Order Details'
         });
     } catch (error) {
@@ -201,4 +227,4 @@ const orderDetailPage = async (req, res) => {
 };
 
 
-module.exports = { listOrders, changeOrderStatus, cancelOrder, manageInventory,updateProductQuantity,getOrderDetails,orderDetailPage };
+module.exports = { listOrders, changeOrderStatus, cancelOrder, manageInventory,getOrderDetails,orderDetailPage };

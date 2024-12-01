@@ -143,7 +143,7 @@
 					<div class="card-body">
 						<% if ( cart.items.length ===0 ) { %>
 							<!-- Display when the cart is empty -->
-							<div class="text-center py-5">
+							<div class="text-center py-5" style="height: 50vh;">
 								<p class="fs-4 text-muted">Your cart is empty.</p>
 								<a href="/user/shop" class="btn btn-primary">Start Shopping</a>
 							</div>
@@ -151,7 +151,7 @@
 							<!-- Display cart items -->
 							<% cart.items.forEach(item => { %>
 								<% if (item.productId) { %>
-									<div class="d-flex align-items-center mb-3 border-bottom pb-3" id="cart-item-<%= item.productId._id %>">
+									<div class="d-flex align-items-center mb-3 border-bottom pb-3" style="height: 50vh;" id="cart-item-<%= item.productId._id %>">
 										<img src="/uploads/product-images/<%= item.productId.productImage[0] %>" class="img-thumbnail rounded me-3" style="width: 100px; height: 100px;" alt="<%= item.productId.productName %>">
 										<div class="flex-grow-1">
 											<h5 class="mb-1"><%= item.productId.productName %></h5>

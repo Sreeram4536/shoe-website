@@ -417,7 +417,7 @@ const filterProduct = async(req,res)=>{
         findProducts.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt))
 
         const categories =  await Category.find({isListed:true});
-        let itemsPerPage = 6;
+        let itemsPerPage = 3;
         let currentPage = parseInt(req.query.page)||1;
         let startIndex = (currentPage-1) * itemsPerPage;
         let endIndex = startIndex+itemsPerPage;
@@ -473,7 +473,7 @@ const filterByPrice = async (req,res)=>{
 
         findProduct.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
 
-        let itemsPerPage = 6;
+        let itemsPerPage = 3;
         let currentPage = parseInt(req.query.page) || 1;
         let startIndex = (currentPage-1)*itemsPerPage;
         let endIndex = startIndex + itemsPerPage;
@@ -526,7 +526,7 @@ const searchProduct = async(req,res)=>{
         }
         searchResult.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
 
-        let itemsPerPage = 6;
+        let itemsPerPage = 3;
         let currentPage = parseInt(req.query.page) || 1;
         let startIndex = (currentPage-1)*itemsPerPage;
         let endIndex = startIndex + itemsPerPage;

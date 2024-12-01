@@ -158,7 +158,7 @@
           <tbody>
             <% orders.forEach(order => { %>
               <tr>
-                <td><%= order._id %></td>
+                <td><%= order.orderId %></td>
                 <td><%= new Date(order.invoiceDate).toLocaleDateString() %></td>
                 <td><%= order.status %></td>
                 <td>₹<%= order.finalAmount %></td>

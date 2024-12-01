@@ -322,6 +322,55 @@ const deleteSingleImage = async (req, res) => {
     }
 };
 
+const updateProductQuantity = async (req, res) => {
+    try {
+        const { productId } = req.params;
+        const { quantity } = req.body;
+        
+        console.log('Updating product:', productId, 'with quantity:', quantity); // Add logging
+
+        if (quantity < 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Quantity cannot be negative'
+            });
+        }
+
+        // Use findByIdAndUpdate for atomic update
+        const updatedProduct = await Product.findByIdAndUpdate(
+            productId,
+            {
+                $set: {
+                    quantity: quantity,
+                    status: quantity > 0 ? 'Available' : 'Out of Stock'
+                }
+            },
+            { new: true } // This option returns the updated document
+        );
+
+        if (!updatedProduct) {
+            return res.status(404).json({
+                success: false,
+                message: 'Product not found'
+            });
+        }
+
+        console.log('Product updated:', updatedProduct); // Add logging
+
+        res.status(200).json({
+            success: true,
+            message: 'Quantity updated successfully',
+            newStatus: updatedProduct.status
+        });
+    } catch (error) {
+        console.error('Error updating product quantity:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Internal Server Error'
+        });
+    }
+};
+
 
 
 module.exports = {
@@ -335,9 +384,14 @@ module.exports = {
     unblockProduct,
     getEditProduct,
     editProduct,
-    deleteSingleImage
+    deleteSingleImage,
+    updateProductQuantity
 
     
 };
+
+
+
+  
 
 

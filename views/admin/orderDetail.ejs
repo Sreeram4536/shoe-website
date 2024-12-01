@@ -76,15 +76,20 @@
                 </table>
             </div>
 
-            <% if (order.address) { %>
+            <% if (order.deliveryAddress) { %>
                 <hr>
                 <h6 class="text-muted mb-3">Delivery Address</h6>
                 <div class="card bg-light">
                     <div class="card-body">
                         <p class="mb-0">
-                            <%= order.address.street %><br>
-                            <%= order.address.city %>, <%= order.address.state %><br>
-                            <%= order.address.pincode %>
+                            <strong>Type:</strong> <%= order.deliveryAddress.addressType %><br>
+                            <strong>Name:</strong> <%= order.deliveryAddress.name %><br>
+                            <strong>Landmark:</strong> <%= order.deliveryAddress.landMark %><br>
+                            <strong>City:</strong> <%= order.deliveryAddress.city %><br>
+                            <strong>State:</strong> <%= order.deliveryAddress.state %><br>
+                            <strong>PIN:</strong> <%= order.deliveryAddress.pincode %><br>
+                            <strong>Phone:</strong> <%= order.deliveryAddress.phone %><br>
+                            <strong>Alternative Phone:</strong> <%= order.deliveryAddress.altPhone %>
                         </p>
                     </div>
                 </div>

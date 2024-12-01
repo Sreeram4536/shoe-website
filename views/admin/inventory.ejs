@@ -159,12 +159,15 @@
 
             // Function to update quantity
             function updateQuantity(productId, quantity, input) {
+                console.log('Sending update request:', { productId, quantity }); // Add logging
+                
                 $.ajax({
                     url: `/admin/inventory/${productId}/update`,
                     method: 'POST',
                     data: { quantity: quantity },
                     success: function(response) {
-                        // Show a subtle toast notification
+                        console.log('Update response:', response); // Add logging
+                        
                         Swal.fire({
                             icon: 'success',
                             title: 'Updated!',
@@ -186,6 +189,8 @@
                         input.data('original', quantity);
                     },
                     error: function(xhr) {
+                        console.error('Update error:', xhr); // Add logging
+                        
                         Swal.fire({
                             icon: 'error',
                             title: 'Error!',

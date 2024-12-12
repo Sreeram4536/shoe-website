@@ -6,6 +6,7 @@ const profileController = require('../controllers/user/profileController');
 const cartController = require('../controllers/user/cartController')
 const orderController = require('../controllers/user/orderController')
 const { userAuth } = require('../middlewares/auth');
+const wishlistController=require('../controllers/user/wishlistController')
 
 // router.get('/user/pageNotFound',userController.pageNotFound);
 
@@ -61,6 +62,8 @@ router.get('/user/order/:orderId', userAuth,orderController.viewOrderDetails);
 router.get('/user/orders',userAuth,orderController.allOrdersPage)
 router.post('/user/order/:orderId/cancel',userAuth,orderController. cancelOrder);
 router.get('/user/order/:orderId/cancel',userAuth,orderController. cancelOrder);
+router.post('/user/order/:orderId/return', userAuth, orderController.returnOrder);
+
 
 
 
@@ -96,5 +99,16 @@ router.get("/user/deleteAddress",userAuth,profileController.deleteAddress)
 // Add this new route
 router.get("/user/change-email-otp", userAuth, profileController.changeEmailOtpPage)
 router.get("/user/change-password-otp", userAuth, profileController.changePasswordOtpPage);
+
+// Wishlist Management Routes
+router.get("/user/wishlist", userAuth, wishlistController.loadWishlist);
+router.post("/user/addToWishlist", userAuth, wishlistController.addToWishlist);
+router.get("/user/removeFromWishlist", userAuth, wishlistController.removeFromWishlist);
+
+router.post('/user/apply-coupon', userAuth, cartController.applyCoupon);
+router.post('/user/remove-coupon',userAuth, cartController.removeCoupon);
+
+router.post('/user/create-razorpay-order', userAuth, cartController.createRazorpayOrder);
+router.post('/user/verify-payment', userAuth, cartController.verifyPayment);
 
 module.exports= router;

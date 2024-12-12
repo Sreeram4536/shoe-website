@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zxx">
 
@@ -202,6 +201,34 @@ Smartphone Compatible web template, free webdesigns for Nokia, Samsung, LG, Sony
 				justify-content: center;
 			}
 		}
+		
+		.button-group {
+			display: flex;
+			gap: 10px;
+			flex-wrap: wrap;
+		}
+		
+		.add-to-wishlist-btn {
+			background: #ff4081;
+			color: white;
+			border: none;
+			padding: 12px 25px;
+			border-radius: 5px;
+			font-size: 16px;
+			cursor: pointer;
+			transition: background 0.3s ease;
+			width: 100%;
+			max-width: 300px;
+		}
+		
+		.add-to-wishlist-btn:hover {
+			background: #e91e63;
+		}
+		
+		.add-to-cart-btn, .out-of-stock-btn {
+			width: 100%;
+			max-width: 300px;
+		}
 		</style>
 
 </head>
@@ -334,18 +361,25 @@ Smartphone Compatible web template, free webdesigns for Nokia, Samsung, LG, Sony
 			
 					<!-- Add to Cart Section -->
 					<div class="cart-section mb-4">
-						<% if (product.quantity > 0) { %>
-							<form onsubmit="return addToCart(event, '<%= product._id %>')" class="cart-form">
-								<input type="hidden" name="product_id" value="<%= product._id %>">
-								<button type="submit" class="add-to-cart-btn">
-									<i class="fa fa-shopping-cart"></i> Add to Cart
+						<div class="button-group">
+							<% if (product.quantity > 0) { %>
+								<form onsubmit="return addToCart(event, '<%= product._id %>')" class="cart-form">
+									<input type="hidden" name="product_id" value="<%= product._id %>">
+									<button type="submit" class="add-to-cart-btn">
+										<i class="fa fa-shopping-cart"></i> Add to Cart
+									</button>
+								</form>
+							<% } else { %>
+								<button class="out-of-stock-btn" disabled>
+									<i class="fa fa-times-circle"></i> Out of Stock
 								</button>
-							</form>
-						<% } else { %>
-							<button class="out-of-stock-btn" disabled>
-								<i class="fa fa-times-circle"></i> Out of Stock
+							<% } %>
+							
+							<!-- Add this new wishlist button -->
+							<button onclick="addToWishlist('<%= product._id %>')" class="add-to-wishlist-btn">
+								<i class="fa fa-heart"></i> Add to Wishlist
 							</button>
-						<% } %>
+						</div>
 					</div>
 			
 					<!-- Social Share Section -->
@@ -1000,6 +1034,43 @@ Smartphone Compatible web template, free webdesigns for Nokia, Samsung, LG, Sony
 			});
 		
 			return false;
+		}
+	</script>
+	<script>
+		function addToWishlist(productId) {
+			$.ajax({
+				url: '/user/addToWishlist',
+				method: 'POST',
+				data: {
+					productId: productId
+				},
+				success: (response) => {
+					if (response.status) {
+						Swal.fire({
+							icon: 'success',
+							title: 'Added to Wishlist',
+							text: "The product has been added to your wishlist",
+							showConfirmButton: false,
+							timer: 1500
+						})
+					} else {
+						Swal.fire({
+							icon: 'info',
+							title: 'Already in Wishlist',
+							text: response.message,
+							timer: 1500
+						})
+					}
+				},
+				error: (error) => {
+					Swal.fire({
+						icon: 'error',
+						title: 'Error',
+						text: 'Something went wrong while adding to wishlist!',
+						timer: 1500
+					})
+				}
+			})
 		}
 	</script>
 

@@ -8,6 +8,8 @@ const customerController=require("../controllers/admin/customerController")
 const categoryController=require("../controllers/admin/categoryController")
 const productController=require("../controllers/admin/productController")
 const orderController=require("../controllers/admin/orderController")
+const couponController=require("../controllers/admin/couponController");
+const salesController=require("../controllers/admin/salesController");
 // const { uploads } = ("../controllers/admin/productController");
 
 // Configure storage for multer
@@ -76,6 +78,19 @@ router.get('/inventory',adminAuth,orderController. manageInventory); // View and
 
 router.get('/orders/:orderId/details', adminAuth,orderController.getOrderDetails);
 router.get('/orders/:orderId/detail', adminAuth, orderController.orderDetailPage);
+
+//Coupon Management
+router.get('/coupon',adminAuth,couponController.loadCoupon)
+router.post('/createCoupon',adminAuth,couponController.createCoupon)
+router.get('/editCoupon',adminAuth,couponController.editCoupon)
+router.post('/updateCoupon',adminAuth,couponController.updateCoupon)
+router.get('/deleteCoupon',adminAuth,couponController.deleteCoupon)
+
+//Sales Report
+router.get('/salesReport', adminAuth, salesController.renderSalesReport);
+router.post('/getSalesReport', adminAuth, salesController.getSalesReport);
+router.get('/downloadSalesReport/pdf', adminAuth, salesController.downloadPDF);
+router.get('/downloadSalesReport/excel', adminAuth, salesController.downloadExcel);
 
 
 module.exports=router;

@@ -58,6 +58,24 @@ Smartphone Compatible web template, free webdesigns for Nokia, Samsung, LG, Sony
 	  /* .category-brand-container {
    text-align: center;
  } */
+	  .wishlist-btn {
+		position: absolute;
+		top: 10px;
+		left: 10px;
+		font-size: 24px;
+		cursor: pointer;
+		z-index: 10;
+		transition: transform 0.2s;
+		text-shadow: 0 0 3px white;
+	}
+
+	.wishlist-btn:hover {
+		transform: scale(1.2);
+	}
+
+	.product-image {
+		position: relative;
+	}
 	  </style>
 	  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
@@ -226,6 +244,7 @@ Smartphone Compatible web template, free webdesigns for Nokia, Samsung, LG, Sony
                             <div class="col-lg-4 col-md-6 col-sm-6 product-card-wrapper">
                                 <div class="product-card">
                                     <div class="product-image">
+                                        <span class="wishlist-btn" onclick="addToWishlist('<%= product._id %>')">❤️</span>
                                         <img src="/uploads/product-images/<%= product.productImage[0] %>" 
                                              alt="<%= product.productName %>"
                                              class="img-fluid">
@@ -532,6 +551,43 @@ Smartphone Compatible web template, free webdesigns for Nokia, Samsung, LG, Sony
 			});
 		
 			return false;
+		}
+
+		function addToWishlist(productId) {
+			
+			$.ajax({
+				url:'/user/addToWishlist',
+				method:'POST',
+				data:{
+					productId:productId
+				},
+				success:(response)=>{
+					if(response.status){
+						Swal.fire({
+							icon:'success',
+							title:'Added to Wishlist',
+							text:"The product has been added to your wishlist",
+							showConfirmButton:false,
+							timer:1500
+						})
+					}else{
+						Swal.fire({
+							icon:'info',
+							title:'Already in Wishlist',
+							text:response.message,
+							timer:1500
+						})
+					}	
+				},
+				error:(error)=>{
+					Swal.fire({
+						icon:'error',
+						title:'Error',
+						text:'Something went wrong while adding to wishlist!',
+						timer:1500
+					})
+				}
+			})
 		}
 </script>
 

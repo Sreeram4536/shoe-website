@@ -193,12 +193,57 @@
 										<td class="text-end">₹<%= item.totalPrice %></td>
 									</tr>
 									<% }) %>
+									
+									<!-- Subtotal Row -->
+									<tr>
+										<td colspan="2" class="text-end">Subtotal:</td>
+										<td class="text-end">₹<span id="subtotal"><%= totalAmount %></span></td>
+									</tr>
+									
+									<!-- Discount Row (Initially Hidden) -->
+									<tr id="discountRow" style="display: none;">
+										<td colspan="2" class="text-end">
+											<div class="applied-coupon-wrapper d-flex justify-content-between align-items-center">
+												<div class="d-flex align-items-center">
+													<i class="fas fa-tag text-success me-2"></i>
+													<span class="text-muted">Applied Coupon:</span>
+													<strong id="appliedCouponCode" class="coupon-code ms-2"></strong>
+												</div>
+												<button class="btn btn-outline-danger btn-sm remove-btn" onclick="removeCoupon()">
+													<i class="fas fa-times me-1"></i>Remove
+												</button>
+											</div>
+										</td>
+										<td class="text-end text-success fw-bold">
+											-₹<span id="discountAmount">0</span>
+										</td>
+									</tr>
+									
+									<!-- Grand Total Row -->
 									<tr class="fw-bold">
-										<td colspan="2">Total Amount</td>
-										<td class="text-end">₹<%= totalAmount %></td>
+										<td colspan="2" class="text-end">Grand Total:</td>
+										<td class="text-end"><span id="grandTotal"><%= totalAmount %></span></td>
 									</tr>
 								</tbody>
 							</table>
+						</div>
+					</div>
+				</div>
+	
+				<!-- Coupon Section -->
+				<div class="card shadow-sm mb-4">
+					<div class="card-header bg-white">
+						<h5 class="mb-0">Apply Coupon</h5>
+					</div>
+					<div class="card-body">
+						<div class="row align-items-center">
+							<div class="col-md-6">
+								<div class="input-group">
+									<input type="text" id="couponCode" class="form-control" placeholder="Enter coupon code">
+									<button class="btn btn-primary" type="button" onclick="applyCoupon()">Apply</button>
+								</div>
+								<small id="couponMessage" class="text-muted"></small>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -260,6 +305,139 @@
 	</div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+	<script>
+	function applyCoupon() {
+		console.log("Apply button clicked");
+		const couponCode = document.getElementById('couponCode').value;
+		const totalAmount = parseFloat(document.getElementById('grandTotal').textContent.replace('₹', ''));
+
+		console.log("Coupon Code:", couponCode);
+		console.log("Total Amount:", totalAmount);
+
+		if (!couponCode.trim()) {
+			Swal.fire({
+				icon: 'warning',
+				title: 'Empty Coupon',
+				text: 'Please enter a coupon code',
+			});
+			return;
+		}
+
+		fetch('/user/apply-coupon', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				couponCode: couponCode,
+				totalAmount: totalAmount
+			})
+		})
+		.then(response => response.json())
+		.then(data => {
+			console.log("Response received:", data);
+			
+			if (data.success) {
+				// Show discount row
+				document.getElementById('discountRow').style.display = 'table-row';
+				
+				// Update discount amount and coupon code
+				document.getElementById('discountAmount').textContent = data.discount;
+				document.getElementById('appliedCouponCode').textContent = couponCode;
+				
+				// Update grand total
+				document.getElementById('grandTotal').textContent = '₹' + data.finalAmount;
+
+				Swal.fire({
+					icon: 'success',
+					title: 'Coupon Applied Successfully!',
+					text: `Discount of ₹${data.discount} has been applied to your order.`,
+					showConfirmButton: true
+				});
+			} else {
+				// Hide discount row
+				document.getElementById('discountRow').style.display = 'none';
+				
+				Swal.fire({
+					icon: 'error',
+					title: 'Coupon Error',
+					text: data.message,
+					showConfirmButton: true
+				});
+			}
+		})
+		.catch(error => {
+			console.error('Error:', error);
+			Swal.fire({
+				icon: 'error',
+				title: 'Error',
+				text: 'An error occurred while applying the coupon. Please try again.',
+				showConfirmButton: true
+			});
+		});
+	}
+
+	function removeCoupon() {
+		const originalTotal = parseFloat(document.getElementById('subtotal').textContent.replace('₹', ''));
+		const removeButton = document.querySelector('.remove-btn');
+		
+		// Add loading state
+		removeButton.classList.add('loading');
+		const originalButtonText = removeButton.innerHTML;
+		removeButton.innerHTML = '';
+		removeButton.disabled = true;
+
+		fetch('/user/remove-coupon', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			}
+		})
+		.then(response => response.json())
+		.then(data => {
+			if (data.success) {
+				// Hide discount row
+				document.getElementById('discountRow').style.display = 'none';
+				
+				// Reset grand total
+				document.getElementById('grandTotal').textContent = '₹' + originalTotal;
+				
+				// Clear coupon input
+				document.getElementById('couponCode').value = '';
+
+				Swal.fire({
+					icon: 'success',
+					title: 'Coupon Removed',
+					showConfirmButton: false,
+					timer: 1500
+				});
+			} else {
+				Swal.fire({
+					icon: 'error',
+					title: 'Error',
+					text: 'Error removing coupon'
+				});
+			}
+		})
+		.catch(error => {
+			console.error('Error:', error);
+			Swal.fire({
+				icon: 'error',
+				title: 'Error',
+				text: 'An error occurred'
+			});
+		})
+		.finally(() => {
+			// Reset button state
+			removeButton.classList.remove('loading');
+			removeButton.innerHTML = originalButtonText;
+			removeButton.disabled = false;
+		});
+	}
+	</script>
 
     <%- include("../partials/user/footer") %>
 </body>

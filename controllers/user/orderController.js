@@ -2,6 +2,8 @@ const Order = require('../../models/orderSchema');
 const Product = require('../../models/productSchema');
 const Address = require('../../models/addressSchema');
 const User = require('../../models/userSchema')
+const mongoose = require('mongoose');
+const Wallet = require('../../models/walletSchema');
 
 const viewOrderDetails = async (req, res) => {
     try {
@@ -112,4 +114,168 @@ const allOrdersPage = async (req, res) => {
     }
 };
 
-module.exports = { viewOrderDetails,cancelOrder,allOrdersPage};
+const returnOrder = async (req, res) => {
+    try {
+        console.log('1. Return order request received');
+        const userId = req.session.user;
+        const orderId = req.params.orderId;
+        const { amount } = req.body;
+
+        console.log('2. Request details:', {
+            userId,
+            orderId,
+            amount,
+            body: req.body
+        });
+
+        if (!amount || isNaN(parseFloat(amount))) {
+            console.log('3. Invalid amount:', amount);
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid amount provided'
+            });
+        }
+
+        const order = await Order.findById(orderId);
+        console.log('4. Found order:', order);
+
+        if (!order) {
+            console.log('5. Order not found for ID:', orderId);
+            return res.status(404).json({
+                success: false,
+                message: 'Order not found'
+            });
+        }
+
+        if (order.userId.toString() !== userId) {
+            console.log('6. User ID mismatch:', {
+                orderUserId: order.userId.toString(),
+                requestUserId: userId
+            });
+            return res.status(403).json({
+                success: false,
+                message: 'Unauthorized access'
+            });
+        }
+
+        if (order.status !== 'Delivered') {
+            console.log('7. Invalid order status:', order.status);
+            return res.status(400).json({
+                success: false,
+                message: 'Only delivered orders can be returned'
+            });
+        }
+
+        try {
+            // Update order status
+            const updatedOrder = await Order.findByIdAndUpdate(
+                orderId,
+                { status: 'Returned' },
+                { new: true }
+            );
+            console.log('8. Order status updated to Returned');
+
+             // Add this new code for Wallet collection
+             const walletTransaction = {
+                transactionId: `RET${Date.now()}${orderId.slice(-4)}`, // Unique transaction ID
+                amount: parseFloat(amount),
+                type: 'Credit',
+                description: `Refund for returned order `,
+                orderId: orderId,
+                status: 'Success',
+                createdAt: new Date()
+            };
+
+            let wallet = await Wallet.findOne({ userId });
+            if (wallet) {
+                // Update existing wallet
+                wallet.transactions.push(walletTransaction);
+                wallet.balance = wallet.balance + parseFloat(amount);
+                await wallet.save();
+            } else {
+                // Create new wallet document
+                wallet = new Wallet({
+                    userId,
+                    balance: parseFloat(amount),
+                    transactions: [walletTransaction],
+                    isActive: true
+                });
+                await wallet.save();
+            }
+
+            // Update user wallet
+            const user = await User.findById(userId);
+            if (!user) {
+                console.log('9. User not found:', userId);
+                throw new Error('User not found');
+            }
+
+            const previousWallet = user.wallet || 0;
+            const updatedUser = await User.findByIdAndUpdate(
+                userId,
+                { wallet: previousWallet + parseFloat(amount) },
+                { new: true }
+            );
+
+            console.log('10. Wallet document created/updated:', {
+                transactionId: walletTransaction.transactionId,
+                amount: amount,
+                newBalance: wallet.balance
+            });
+
+            return res.status(200).json({
+                success: true,
+                message: 'Order returned successfully and amount added to wallet'
+            });
+
+        } catch (error) {
+            console.log('11. Error in updates:', error);
+            throw error;
+        }
+    } catch (error) {
+        console.error('12. Final error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'An error occurred while processing the return',
+            error: error.message
+        });
+    }
+};
+
+const placeOrder = async (req, res) => {
+    try {
+        const { paymentMethod, chosenAddress } = req.body;
+        
+        // Create the order
+        const order = new Order({
+            // ... your order creation logic ...
+            paymentMethod,
+            paymentStatus: paymentMethod === 'Wallet' ? 'Completed' : 'Pending',
+            status: 'Pending'
+        });
+
+        await order.save();
+
+        res.send(`
+            <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+            <script>
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Order placed successfully!',
+                    showConfirmButton: false,
+                    timer: 1500
+                }).then(() => {
+                    window.location.href = '/user/orders';
+                });
+            </script>
+        `);
+    } catch (error) {
+        console.error('Error placing order:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+module.exports = { viewOrderDetails,cancelOrder,allOrdersPage,returnOrder};

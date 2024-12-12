@@ -137,9 +137,13 @@
     display: none;
   }
 
-  .tab-pane.active.show,
   .tab-pane.active.in {
     display: block;
+  }
+
+  /* Add transition for smooth tab switching */
+  .tab-content > .tab-pane {
+    transition: all 0.3s ease-in-out;
   }
 
   @media (max-width: 768px) {
@@ -149,6 +153,89 @@
 
     .card {
       margin-bottom: 15px;
+    }
+  }
+
+  /* Wallet Balance Card Styles */
+  .wallet-balance-card {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    border-radius: 15px;
+    padding: 25px;
+    color: white;
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.2);
+  }
+
+  .balance-header {
+    text-align: center;
+    margin-bottom: 15px;
+  }
+
+  .balance-label {
+    display: block;
+    font-size: 1rem;
+    margin-bottom: 10px;
+    opacity: 0.9;
+  }
+
+  .balance-amount {
+    font-size: 2.5rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+  }
+
+  .balance-amount i {
+    font-size: 2rem;
+  }
+
+  .balance-footer {
+    text-align: center;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  /* Add Money Section Styles */
+  .add-money-section {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 20px;
+  }
+
+  .section-title {
+    color: #495057;
+    font-weight: 600;
+  }
+
+  .input-group {
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+  }
+
+  .input-group-text {
+    background-color: #e9ecef;
+    color: #495057;
+    font-weight: 600;
+  }
+
+  .btn-primary {
+    padding: 8px 20px;
+  }
+
+  /* Responsive Adjustments */
+  @media (max-width: 576px) {
+    .wallet-balance-card {
+      padding: 20px;
+    }
+
+    .balance-amount {
+      font-size: 2rem;
+    }
+
+    .balance-amount i {
+      font-size: 1.5rem;
     }
   }
 </style>
@@ -338,19 +425,43 @@
             <div class="tab-pane fade" id="track-orders">
               <div class="panel">
                 <div class="panel-heading">
-                  <h5 class="panel-title">Wallet</h5>
+                  <h5 class="panel-title">
+                    <i class="fas fa-wallet me-2"></i>Wallet Status
+                  </h5>
                 </div>
                 <div class="panel-body">
-                  <form>
-                    <div class="form-group">
-                      <label for="walletAmount">Amount</label>
-                      <div class="input-group">
-                        <span class="input-group-addon">₹</span>
-                        <input type="number" class="form-control" id="walletAmount">
+                  <!-- Wallet Balance Card -->
+                  <div class="wallet-balance-card mb-4">
+                    <div class="balance-header">
+                      <span class="balance-label">Available Balance</span>
+                      <div class="balance-amount">
+                        <i class="fas fa-rupee-sign"></i>
+                        <span class="amount"><%= walletData.balance || 0 %></span>
                       </div>
                     </div>
-                    <button type="button" class="btn btn-success">Add Money</button>
-                  </form>
+                    <div class="balance-footer">
+                      <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        You can use this balance for your purchases
+                      </small>
+                    </div>
+                  </div>
+
+                  <!-- Add Money Section -->
+                  <!-- <div class="add-money-section">
+                    <h6 class="section-title mb-3">Add Money to Wallet</h6>
+                    <div class="input-group mb-3">
+                      <span class="input-group-text">₹</span>
+                      <input type="number" 
+                             class="form-control" 
+                             id="walletAmount" 
+                             placeholder="Enter amount"
+                             min="1">
+                      <button class="btn btn-primary" type="button">
+                        <i class="fas fa-plus-circle me-2"></i>Add
+                      </button>
+                    </div>
+                  </div> -->
                 </div>
               </div>
             </div>
@@ -367,12 +478,35 @@
                       <thead>
                         <tr>
                           <th>Date</th>
-                          <th>Status</th>
+                          <th>Transaction ID</th>
+                          <th>Description</th>
                           <th>Amount</th>
+                          <th>Status</th>
                         </tr>
                       </thead>
                       <tbody>
-                        <!-- Add wallet history data here -->
+                        <% if (walletData && walletData.transactions && walletData.transactions.length > 0) { %>
+                          <% walletData.transactions.forEach(transaction => { %>
+                            <tr>
+                              <td><%= new Date(transaction.createdAt).toLocaleDateString() %></td>
+                              
+                              <td><small class="text-muted"><%= transaction.transactionId %></small></td>
+                              <td><%= transaction.description %></td>
+                              <td class="<%= transaction.type === 'Credit' ? 'text-success' : 'text-danger' %>">
+                                <strong><%= transaction.type === 'Credit' ? '+' : '-' %>₹<%= transaction.amount %></strong>
+                              </td>
+                              <td>
+                                <span class="badge bg-success rounded-pill">
+                                  <%= transaction.status %>
+                                </span>
+                              </td>
+                            </tr>
+                          <% }); %>
+                        <% } else { %>
+                          <tr>
+                            <td colspan="5" class="text-center">No transactions found</td>
+                          </tr>
+                        <% } %>
                       </tbody>
                     </table>
                   </div>
@@ -400,10 +534,15 @@
   </section>
 </main>
 
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const tabLinks = document.querySelectorAll('[data-toggle="tab"]');
     const tabPanes = document.querySelectorAll('.tab-pane');
+    
+    // First, ensure dashboard is active by default
+    document.querySelector('#dashboard').classList.add('in', 'active');
+    document.querySelector('a[href="#dashboard"]').parentElement.classList.add('active');
     
     tabLinks.forEach(link => {
         link.addEventListener('click', function(e) {
@@ -413,7 +552,6 @@ document.addEventListener('DOMContentLoaded', function() {
             tabLinks.forEach(l => l.parentElement.classList.remove('active'));
             tabPanes.forEach(p => {
                 p.classList.remove('in', 'active');
-                p.classList.add('fade');
             });
             
             // Add active class to clicked tab
@@ -428,6 +566,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+
 </script>
 
 <%- include("../partials/user/footer") %>

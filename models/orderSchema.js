@@ -62,6 +62,18 @@ const orderSchema= new mongoose.Schema({
     couponApplied:{
         type:Boolean,
         default:false
+    },
+    paymentMethod: {
+        type: String,
+        required: true,
+        enum: ['COD', 'Wallet', 'RazorPay']
+    },
+    
+    paymentStatus: {
+        type: String,
+        required: true,
+        enum: ['Pending', 'Completed', 'Failed', 'Refunded'],
+        default: 'Pending'
     }
 })
 

@@ -101,6 +101,21 @@
         .swal2-cancel {
             background-color: #dc3545 !important;
         }
+
+        .btn-warning {
+            background-color: #ffc107;
+            border-color: #ffc107;
+            color: #000;
+        }
+
+        .btn-warning:hover {
+            background-color: #ffb300;
+            border-color: #ffb300;
+        }
+
+        .me-2 {
+            margin-right: 0.5rem;
+        }
     </style>
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
 </head>
@@ -196,8 +211,14 @@
                         <div class="text-center">
                             <% if (order.status === 'Pending') { %>
                                 <button onclick="confirmCancel('<%= order._id %>')" 
-                                        class="btn btn-danger">
+                                        class="btn btn-danger me-2">
                                     Cancel Order
+                                </button>
+                            <% } %>
+                            <% if (order.status === 'Delivered') { %>
+                                <button onclick="confirmReturn('<%= order._id %>','<%=order.finalAmount %>')" 
+                                        class="btn btn-warning me-2">
+                                    Return Order
                                 </button>
                             <% } %>
                             <button onclick="goBack()" class="btn btn-secondary">Back to Orders</button>
@@ -219,16 +240,17 @@
 
     <script>
          document.addEventListener('DOMContentLoaded', function() {
-             if (errorMessage) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Oops...',
-                text: '<%= errorMessage %>',
-                timer: 3000,
-                showConfirmButton: false
-            });
-       } 
-    });
+             const errorMessage = '<%= errorMessage %>';
+             if (errorMessage && errorMessage !== 'null') {
+                 Swal.fire({
+                     icon: 'error',
+                     title: 'Oops...',
+                     text: errorMessage,
+                     timer: null,
+                     showConfirmButton: true
+                 });
+             }
+         });
     
         // Function to confirm order cancellation
         function confirmCancel(orderId) {
@@ -299,13 +321,14 @@
         }
     
         // Function to show loading state
-        function showLoading() {
+        function showLoading(message = 'Processing...') {
             Swal.fire({
-                title: 'Processing...',
-                html: 'Please wait while we cancel your order.',
+                title: message,
+                text: 'Please wait while we process your request.',
                 allowOutsideClick: false,
+                allowEscapeKey: false,
                 showConfirmButton: false,
-                willOpen: () => {
+                didOpen: () => {
                     Swal.showLoading();
                 }
             });
@@ -318,6 +341,77 @@
                 title: 'Network Error',
                 text: 'Please check your internet connection and try again.',
                 showConfirmButton: true
+            });
+        }
+    
+        // Add this function for return confirmation
+        function confirmReturn(orderId, amount) {
+            console.log('Starting return process:', { orderId, amount });
+            Swal.fire({
+                title: 'Return Order',
+                text: `Amount ₹${amount} will be added to your wallet after return confirmation`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, return it!',
+                cancelButtonText: 'No, keep it',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    showLoading('Processing return request...');
+                    
+                    const returnAmount = parseFloat(amount);
+                    if (isNaN(returnAmount)) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Invalid amount',
+                            timer: null,
+                            showConfirmButton: true
+                        });
+                        return;
+                    }
+
+                    fetch(`/user/order/${orderId}/return`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ amount: returnAmount })
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(data => {
+                                throw new Error(data.message || 'Network response was not ok');
+                            });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Return Initiated!',
+                                text: data.message || 'Amount has been added to your wallet',
+                                timer: null,
+                                showConfirmButton: true
+                            }).then(() => {
+                                window.location.href = '/user/orders';
+                            });
+                        } else {
+                            throw new Error(data.message || 'Failed to process return');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Client-side error:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Oops...',
+                            text: error.message || 'Something went wrong!',
+                            timer: null,
+                            showConfirmButton: true
+                        });
+                    });
+                }
             });
         }
     </script>

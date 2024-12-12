@@ -69,14 +69,27 @@
                             </label>
 
                             <label class="payment-option">
-                                <input type="radio" name="paymentMethod" value="Online" required>
+                                <input type="radio" name="paymentMethod" value="Wallet" required>
                                 <div class="option-content">
-                                    <div class="option-icon online">
-                                        <i class="fas fa-globe"></i>
+                                    <div class="option-icon wallet">
+                                        <i class="fas fa-wallet"></i>
                                     </div>
                                     <div class="option-details">
-                                        <h4>Online Payment</h4>
-                                        <p>Secure payment via cards/UPI</p>
+                                        <h4>Pay with Wallet</h4>
+                                        <!-- <p>Balance: ₹</%= user.wallet || 0 %></p> -->
+                                    </div>
+                                </div>
+                            </label>
+
+                            <label class="payment-option">
+                                <input type="radio" name="paymentMethod" value="RazorPay" id="razorpay" required>
+                                <div class="option-content">
+                                    <div class="option-icon online">
+                                        <i class="fas fa-credit-card"></i>
+                                    </div>
+                                    <div class="option-details">
+                                        <h4>RazorPay</h4>
+                                        <p>Cards/UPI/NetBanking</p>
                                     </div>
                                 </div>
                             </label>
@@ -84,7 +97,7 @@
                     </div>
 
                     <div class="action-section">
-                        <button type="submit" class="place-order-btn">
+                        <button type="submit" id="orderBtn" class="place-order-btn">
                             <span>Place Order</span>
                             <i class="fas fa-arrow-right"></i>
                         </button>
@@ -230,7 +243,7 @@
 
     .payment-options {
         display: grid;
-        gap: 20px;
+        gap: 15px;
     }
 
     .payment-option {
@@ -241,9 +254,9 @@
     .option-content {
         display: flex;
         align-items: center;
-        padding: 20px;
+        padding: 12px 15px;
         border: 2px solid #e2e8f0;
-        border-radius: 15px;
+        border-radius: 12px;
         transition: all 0.3s ease;
     }
 
@@ -253,18 +266,23 @@
     }
 
     .option-icon {
-        width: 50px;
-        height: 50px;
-        border-radius: 12px;
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-right: 20px;
+        margin-right: 15px;
     }
 
     .option-icon.cod {
         background: #c6f6d5;
         color: #38a169;
+    }
+
+    .option-icon.wallet {
+        background: #fed7aa;
+        color: #c2410c;
     }
 
     .option-icon.online {
@@ -273,18 +291,18 @@
     }
 
     .option-icon i {
-        font-size: 24px;
+        font-size: 20px;
     }
 
     .option-details h4 {
-        margin: 0 0 5px;
-        font-size: 16px;
+        margin: 0 0 2px;
+        font-size: 15px;
     }
 
     .option-details p {
         margin: 0;
         color: #718096;
-        font-size: 14px;
+        font-size: 13px;
     }
 
     .action-section {
@@ -342,5 +360,162 @@
         }
     }
 </style>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+// document.querySelector('form').addEventListener('submit', async function(e) {
+//     e.preventDefault();
+document.getElementById('orderBtn').addEventListener('click', async function(e) {
+    e.preventDefault();
+    
+    const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+    const chosenAddress = document.querySelector('input[name="chosenAddress"]').value;
+
+    const totalAmount = Number('<%= totalAmount %>');
+    
+    if (paymentMethod === 'RazorPay') {
+        try {
+            // Create Razorpay order
+            const orderResponse = await fetch('/user/create-razorpay-order', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    amount:  totalAmount * 100  // Convert to paise
+                })
+            });
+
+            if (!orderResponse.ok) {
+                throw new Error('Failed to create order');
+            }
+
+            const order = await orderResponse.json();
+            console.log("Razorpay order created:", order); // Debug log
+
+            // Initialize Razorpay payment
+            const options = {
+                key: '<%= process.env.RAZORPAY_KEY_ID %>',
+                amount: totalAmount * 100,
+                currency: 'INR',
+                name: 'Downy Shoes',
+                description: 'Order Payment',
+                order_id: order.id,
+                handler: async function(response) {
+                    // After successful payment, create order in your system
+                    const orderData = {
+                        chosenAddress,
+                        paymentMethod: 'RazorPay',
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_signature: response.razorpay_signature
+                    };
+
+                    try {
+                        const placeOrderResponse = await fetch('/user/place-order', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(orderData)
+                        });
+
+                        const result = await placeOrderResponse.json();
+
+                        if (result.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Order Placed Successfully!',
+                                text: 'Your payment was successful',
+                                showConfirmButton: false,
+                                timer: 1500
+                            }).then(() => {
+                                window.location.href = `/user/order-success?orderId=${result.orderId}`;
+                            });
+                        } else {
+                            throw new Error(result.message);
+                        }
+                    } catch (error) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Order Failed',
+                            text: error.message || 'Failed to place order'
+                        });
+                    }
+                },
+                prefill: {
+                    name: '<%= user.name %>',
+                    email: '<%= user.email %>'
+                },
+                theme: {
+                    color: '#3399cc'
+                }
+            };
+
+            console.log("Initializing Razorpay with options:", options); // Debug log
+            console.log('Amount in paise:', totalAmount * 100);
+            console.log('Razorpay Key:', options.key);
+            console.log('Order ID:', order.id);
+            const rzp = new Razorpay(options);
+            rzp.open();
+
+            // Handle payment failure
+            rzp.on('payment.failed', function(response) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Payment Failed',
+                    text: 'The payment was not successful. Please try again.'
+                });
+            });
+
+        } catch (error) {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: error.message || 'Something went wrong!'
+            });
+        }
+    } else {
+        // For COD and Wallet payments
+        try {
+            const response = await fetch('/user/place-order', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    chosenAddress,
+                    paymentMethod
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Order Placed Successfully!',
+                    text: 'Your payment was successful',
+                    showConfirmButton: false,
+                    timer: 1500
+                }).then(() => {
+                    window.location.href = `/user/order-success?orderId=${result.orderId}`;
+                });
+            } else {
+                throw new Error(result.message);
+            }
+        } catch (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Order Failed',
+                text: error.message || 'Failed to place order'
+            });
+        }
+    }
+});
+</script>
 
 <%- include("../partials/user/footer") %>

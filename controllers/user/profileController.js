@@ -6,6 +6,7 @@ const bcrypt = require('bcrypt');
 const env = require("dotenv").config();
 const seesion=require("express-session");
 const { session } = require("passport");
+const Wallet = require("../../models/walletSchema");
 
 function generateOtp(){
     const digits="1234567890";
@@ -163,43 +164,16 @@ const postNewPassword = async(req,res)=>{
     }
 }
 
-// const userProfile = async(req,res)=>{
-//     try {
-//         const userId = req.session.user;
-//         const userData = await User.findById(userId);
-//         const addressData = await Address.findOne({userId:userId});
-
-//         const orders = await Order.find({ userId: req.session.user })
-//             .populate({
-//                 path: 'orderedItems.product',
-//                 select: 'productName productImage'
-//             })
-//             .populate({
-//                 path: 'address',
-//                 select: 'address'
-//             })
-//             .sort({ createdOn: -1 });
-
-//         res.render('user/profile',{
-//             user: userData,
-//             userAddress: addressData,
-//             orders: orders,
-//             session: req.session
-//         });
-        
-//     } catch (error) {
-//         console.error("Error for retrieve profile:", error);
-//         res.redirect("/pageNotFound")
-//     }
-// }
-
 const userProfile = async(req,res) => {
     try {
         const userId = req.session.user;
         const userData = await User.findById(userId);
         const addressData = await Address.findOne({userId:userId});
-
-        // First get orders
+        
+        // Fetch wallet data
+        const walletData = await Wallet.findOne({ userId: req.session.user })
+            .sort({ 'transactions.createdAt': -1 });
+            console.log('Wallet Data:', walletData);
         const orders = await Order.find({ userId: req.session.user })
             .populate({
                 path: 'orderedItems.product',
@@ -207,14 +181,11 @@ const userProfile = async(req,res) => {
             })
             .sort({ createdOn: -1 });
 
-        // Then fetch all addresses for this user
         const userAddresses = await Address.findOne({ userId: req.session.user });
 
-        // Prepare orders with address details
         const ordersWithAddress = orders.map(order => {
             const orderObj = order.toObject();
             if (userAddresses && userAddresses.address) {
-                // Find the specific address from the address array using the stored address ID
                 const deliveryAddress = userAddresses.address.find(
                     addr => addr._id.toString() === order.address.toString()
                 );
@@ -227,6 +198,7 @@ const userProfile = async(req,res) => {
             user: userData,
             userAddress: addressData,
             orders: ordersWithAddress,
+            walletData: walletData || { transactions: [] },
             session: req.session
         });
         

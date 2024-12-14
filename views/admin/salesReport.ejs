@@ -134,6 +134,9 @@
                         <th>Payment Method</th>
                     `;
 
+                
+                    
+
                     data.sales.forEach(order => {
                         const row = table.insertRow();
                         row.innerHTML = `
@@ -142,7 +145,7 @@
                             <td>${order.userId ? order.userId.name : 'N/A'}</td>
                             <td>₹${order.totalPrice.toFixed(2)}</td>
                             
-                            <td>₹${order.couponDiscount ? order.couponDiscount.toFixed(2) : '0.00'}</td>
+                            <td>₹${order.discount ? order.discount.toFixed(2) : '0.00'}</td>
                             <td>₹${order.finalAmount.toFixed(2)}</td>
                             <td>${order.paymentMethod}</td>
                         `;

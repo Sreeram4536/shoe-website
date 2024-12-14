@@ -117,9 +117,10 @@ const getSalesReport = async (req, res) => {
             .populate('orderedItems.product')
             .sort({ createdOn: -1 });
 
+            console.log("data is:",salesData);
         // Calculate summary
         const summary = await calculateSalesSummary(salesData);
-
+        
         // Return response
         res.json({ 
             success: true, 

@@ -1,3 +1,5 @@
+<!-- </%- include("../partials/user/header") %> -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Checkout</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css">
-	<style>
+	<!-- <style>
         body {
             background-color: #dfe1e3; /* Light grey background */
         }
@@ -18,10 +20,45 @@
         .table-bordered {
             background-color: #ffffff; /* Ensure table is on a white background for clarity */
         }
+
+		.modal {
+  
+  display: none; /* Hidden by default */
+  position: fixed;
+  z-index: 1050; /* Higher than other elements */
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden; /* Prevent scrolling */
+  background-color: rgba(0, 0, 0, 0.5); /* Background overlay */
+}
+
+.modal-content {
+  background-color: #fff;
+  margin: 15% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 30%;
+}
+
+.close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  color: #aaa;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
     </style>
-</head>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script> -->
+<!-- </head>
 <body>
-    <script type="application/x-javascript">
+    <!-- <script type="application/x-javascript">
 		addEventListener("load", function () {
 			setTimeout(hideURLbar, 0);
 		}, false);
@@ -30,16 +67,16 @@
 			window.scrollTo(0, 1);
 		}
 	</script>
-	<!-- //custom-theme -->
+	//custom-theme 
 	<link href="/css/bootstrap.css" rel="stylesheet" type="text/css" media="all" />
 	<link rel="stylesheet" href="/css/shop.css" type="text/css" media="screen" property="" />
 	<link href="/css/style7.css" rel="stylesheet" type="text/css" media="all" />
-	<!-- Owl-carousel-CSS -->
+	<!Owl-carousel-CSS --
 	<link rel="stylesheet" type="text/css" href="/css/jquery-ui1.css">
 	<link href="/css/style.css" rel="stylesheet" type="text/css" media="all" />
-	<!-- font-awesome-icons -->
+	<-- font-awesome-icons --
 	<link href="/css/font-awesome.css" rel="stylesheet">
-	<!-- //font-awesome-icons -->
+	<-- //font-awesome-icons --
 	<link href="//fonts.googleapis.com/css?family=Montserrat:100i,200,200i,300,300i,400,400i,500,500i,600,600i,700,700i,800"
 	    rel="stylesheet">
 	<link href="//fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i,800" rel="stylesheet">
@@ -67,16 +104,16 @@
 	 
 	  .price-button:active {
 		transform: scale(0.95);
-	  }
+	  } --
 	  /* .category-brand-container {
    text-align: center;
  } */
 	  </style>
-</head>
+</head> 
 
 <body>
 	<!-- banner -->
-<div class="banner_top innerpage" id="home">
+<!-- <div class="banner_top innerpage" id="home">
 		<div class="wrapper_top_w3layouts">
 			<div class="header_agileits">
 				<div class="logo inner_page_log">
@@ -106,9 +143,9 @@
 				</div>
 				<div class="mobile-nav-button">
 					<button id="trigger-overlay" type="button"><i class="fa fa-bars" aria-hidden="true"></i></button>
-				</div>
+				</div> -->
 				<!-- cart details -->
-				<div class="top_nav_right">
+				<!-- <div class="top_nav_right">
 					<div class="shoecart shoecart2 cart cart box_1">
 						<form action="#" method="post" class="last">
 							<input type="hidden" name="cmd" value="_cart">
@@ -118,10 +155,10 @@
 					</div>
 				</div>
 			</div>
-		</div>
+		</div> -->
 		<!-- //cart details -->
 		<!-- search -->
-		<div class="search_w3ls_agileinfo">
+		<!-- <div class="search_w3ls_agileinfo">
 			<div class="cd-main-header">
 				<ul class="cd-header-buttons">
 					<li><a class="cd-search-trigger" href="#cd-search"> <span></span></a></li>
@@ -132,11 +169,11 @@
 					<input name="Search" type="search" placeholder="Click enter after typing...">
 				</form>
 			</div>
-		</div>
+		</div> -->
 		<!-- //search -->
-		<div class="clearfix"></div>
+		<!-- <div class="clearfix"></div> -->
 		<!-- /banner_inner -->
-		<div class="services-breadcrumb_w3ls_agileinfo">
+		<!-- <div class="services-breadcrumb_w3ls_agileinfo">
 			<div class="inner_breadcrumb_agileits_w3">
 
 				<ul class="short">
@@ -144,9 +181,9 @@
 					<li>Shop</li>
 				</ul>
 			</div>
-		</div>
+		</div> -->
 		<!-- //banner_inner -->
-	</div>
+	<!-- </div> -->
 	<div class="container py-5">
 		<div class="row justify-content-center">
 			<div class="col-12 col-lg-10">
@@ -257,6 +294,8 @@
 						</a>
 					</div>
 					<div class="card-body">
+						<button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addAddressModal">Add New Address</button>
+                <div id="addressList">
 						<% if (addresses.length > 0) { %>
 							<form action="/user/payment" method="POST">
 								<div class="row g-3">
@@ -274,11 +313,22 @@
 														<p class="mb-1 mt-2">
 															<%= addr.city %>, <%= addr.state %>, <%= addr.pincode %>
 														</p>
+														<p class="mb-1 mt-2"></p>
+															<%= addr.landMark %>
+														</p>
 														<small class="text-muted">
 															📞 <%= addr.phone %> / <%= addr.altPhone %>
 														</small>
 													</label>
 												</div>
+												<button
+												type="button"
+												class="btn btn-outline-secondary btn-sm mt-3 edit-address-btn"
+												onclick="populateEditForm('<%= addr._id %>', '<%= addr.addressType %>', '<%= addr.name %>', '<%= addr.city %>', '<%= addr.state %>', '<%= addr.pincode %>','<%= addr.landMark%>', '<%= addr.phone %>', '<%= addr.altPhone %>')">
+												<i class="fa fa-edit"></i> Edit
+											</button>
+											
+
 											</div>
 										</div>
 									</div>
@@ -304,9 +354,281 @@
 		</div>
 	</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+	<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title" id="exampleModalLabel">Modal Title</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					This is the content of the modal.
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					<button type="button" class="btn btn-primary">Save changes</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="modal fade" id="addAddressModal" tabindex="-1" role="dialog" aria-labelledby="addAddressModalLabel" aria-hidden="true">
+		<div class="modal-dialog" role="document">
+			<form id="addAddressForm" class="modal-content" method="POST" action="/user/editAddress">
+				<input type="hidden" id="addressId" name="addressId">
+				<div class="modal-header">
+					<h5 class="modal-title" id="addAddressModalLabel">Add/Edit Address</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="closeModal()">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					<!-- Address Fields -->
+					<div class="mb-3">
+						<label for="addressType" class="form-label">Address Type</label>
+						<input type="text" class="form-control" id="addressType" name="addressType" required>
+					</div>
+					<div class="mb-3">
+						<label for="name" class="form-label">Full Name</label>
+						<input type="text" class="form-control" id="name" name="name" required>
+					</div>
+					<div class="mb-3">
+						<label for="city" class="form-label">City</label>
+						<input type="text" class="form-control" id="city" name="city" required>
+					</div>
+					<div class="mb-3">
+						<label for="state" class="form-label">State</label>
+						<input type="text" class="form-control" id="state" name="state" required>
+					</div>
+					<div class="mb-3">
+						<label for="pincode" class="form-label">Pincode</label>
+						<input type="number" class="form-control" id="pincode" name="pincode" required>
+					</div>
+					<div class="mb-3">
+						<label for="landMark" class="form-label">Landmark</label>
+						<input type="text" class="form-control" id="landMark" name="landMark" required>
+					</div>
+					<div class="mb-3">
+						<label for="phone" class="form-label">Phone</label>
+						<input type="text" class="form-control" id="phone" name="phone" required>
+					</div>
+					<div class="mb-3">
+						<label for="altPhone" class="form-label">Alternate Phone</label>
+						<input type="text" class="form-control" id="altPhone" name="altPhone">
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="submit" class="btn btn-primary">Save Address</button>
+				</div>
+			</form>
+		</div>
+	</div>
+
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script src="/js/bootstrap.bundle.min.js"></script>
+    <script>
+
+document.addEventListener("DOMContentLoaded", () => {
+    // Populate edit form
+    window.populateEditForm = (id, addressType, name, city, state, pincode,landMark, phone, altPhone) => {
+        const form = document.getElementById("addAddressForm");
+        form.action = `/user/editAddress/?=${id}`; // Update the action URL for editing
+
+        // Prefill form fields
+		document.getElementById("addressId").value = id;
+        document.getElementById("addressType").value = addressType;
+        document.getElementById("name").value = name;
+        document.getElementById("city").value = city;
+        document.getElementById("state").value = state;
+        document.getElementById("pincode").value = pincode;
+		document.getElementById("landMark").value = landMark;
+        document.getElementById("phone").value = phone;
+        document.getElementById("altPhone").value = altPhone;
+
+		form.dataset.mode = 'edit';
+
+        // Open the modal programmatically
+        const addAddressModal = new bootstrap.Modal(document.getElementById("addAddressModal"));
+        addAddressModal.show();
+    };
+
+    // Close the modal programmatically
+    window.closeModal = () => {
+        const addAddressModal = bootstrap.Modal.getInstance(document.getElementById("addAddressModal"));
+        addAddressModal.hide();
+    };
+
+	
+
+
+    // Add Address Form Submission
+    // document.getElementById("addAddressForm").addEventListener("submit", async (event) => {
+    //     event.preventDefault();
+    //     const formData = new FormData(event.target);
+        
+    //     try {
+    //         const response = await fetch(`/user/editAddress?=${addressId}`, {
+    //             method: "POST",
+    //             body: new URLSearchParams(formData),
+    //         });
+    //         const result = await response.json();
+
+    //         if (result.success) {
+				
+    //             // Show success alert
+    //             Swal.fire("Success", "Address saved successfully", "success").then(() => {
+    //                 fetchAddresses(); // This should be called here
+    //                 closeModal(); // Close the modal after fetching addresses
+    //             });
+				
+    //         } else {
+    //             Swal.fire("Error", result.message, "error"); // Show error alert
+    //         }
+			
+    //     } catch (error) {
+    //         Swal.fire("Error", "Failed to save address", "error"); // Show error alert
+    //     }
+    // });
+
+	document.getElementById("addAddressForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const mode = event.target.dataset.mode; // Get the mode (add or edit)
+
+    try {
+        let response;
+        if (mode === 'edit') {
+            // If in edit mode, send a PUT request to update the address
+            response = await fetch(`/user/editAddress?id=${document.getElementById("addressId").value}`, {
+                method: "POST",
+                body: new URLSearchParams(formData),
+            });
+        } else {
+            // If in add mode, send a POST request to add the address
+            response = await fetch('/user/addAddress', {
+                method: "POST",
+                body: new URLSearchParams(formData),
+            });
+        }
+
+        const result = await response.json();
+
+        if (result.success) {
+            // Show success alert
+            Swal.fire("Success", mode === 'edit' ? "Address updated successfully" : "Address added successfully", "success").then(() => {
+                fetchAddresses(); // Refresh the address list
+                closeModal(); // Close the modal after adding/updating the address
+            });
+        } else {
+            Swal.fire("Error", result.message, "error"); // Show error alert
+        }
+        
+    } catch (error) {
+        Swal.fire("Error", "Failed to save address", "error"); // Show error alert
+    }
+});
+
+    // Function to update the address list in the UI
+    function updateAddressList(updatedAddress) {
+        const addressList = document.getElementById('addressList'); // Assuming you have an element with this ID
+        const addressCard = addressList.querySelector(`[data-address-id="${updatedAddress._id}"]`); // Find the address card by ID
+
+        if (addressCard) {
+            // Update the address card with new values
+            addressCard.querySelector('.addressType').textContent = updatedAddress.addressType;
+            addressCard.querySelector('.name').textContent = updatedAddress.name;
+            addressCard.querySelector('.city').textContent = updatedAddress.city;
+            addressCard.querySelector('.state').textContent = updatedAddress.state;
+            addressCard.querySelector('.pincode').textContent = updatedAddress.pincode;
+            addressCard.querySelector('.phone').textContent = updatedAddress.phone;
+            addressCard.querySelector('.altPhone').textContent = updatedAddress.altPhone;
+        }
+    }
+
+});
+
+// Fetch and populate address list
+async function fetchAddresses() {
+    try {
+        const response = await fetch('/user/editAddress'); // Fetch addresses from the server
+        const addresses = await response.json(); // Parse the JSON response
+
+        const addressList = document.getElementById('addressList'); // Get the address list element
+        addressList.innerHTML = addresses.map(addr => `
+            <div class="card mb-2" data-address-id="${addr._id}"> <!-- Added data attribute for address ID -->
+                <div class="card-body">
+                    <h5>${addr.name} (${addr.addressType})</h5> <!-- Display name and address type -->
+                    <p>${addr.city}, ${addr.state} - ${addr.pincode}</p> <!-- Display city, state, and pincode -->
+                    <p>${addr.landMark ? addr.landMark : 'No landmark provided'}</p> <!-- Display landmark if available -->
+                    <small class="text-muted">📞 ${addr.phone} / ${addr.altPhone ? addr.altPhone : 'N/A'}</small> <!-- Display phone numbers -->
+                </div>
+            </div>
+        `).join(''); // Join the HTML strings and set as inner HTML
+    } catch (error) {
+        console.error('Error fetching addresses:', error); // Log the error to the console
+        // Swal.fire('Error', 'Failed to fetch addresses: ' + error.message, 'error'); // Show error message to the user
+		window.location.reload();
+    }
+}
+        
+        // Add Address Form Submission
+        // document.getElementById('addAddressForm').addEventListener('submit', async (event) => {
+        //     event.preventDefault();
+        //     const formData = new FormData(event.target);
+
+        //     try {
+        //         const response = await fetch('/user/addAddress', {
+        //             method: 'POST',
+        //             body: new URLSearchParams(formData),
+        //         });
+        //         const result = await response.json();
+
+        //         if (result.success) {
+        //             Swal.fire('Success', 'Address added successfully', 'success');
+        //             fetchAddresses(); // Refresh addresses
+        //             closeModal(); // Close the modal after success
+        //         } else {
+        //             Swal.fire('Error', result.message, 'error');
+        //         }
+        //     } catch (error) {
+        //         Swal.fire('Error', 'Failed to add address', 'error');
+        //     }
+        // });
+
+        // Place Order Handler
+        document.getElementById('placeOrder').addEventListener('click', async () => {
+            const selectedPaymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+
+            try {
+                const response = await fetch('/user/placeOrder', {
+                    method: 'POST',
+                    body: JSON.stringify({ paymentMethod: selectedPaymentMethod }),
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    Swal.fire('Success', 'Order placed successfully', 'success');
+                } else {
+                    Swal.fire('Error', result.message, 'error');
+                }
+            } catch (error) {
+                Swal.fire('Error', 'Failed to place order', 'error');
+            }
+        });
+
+        // Load initial data
+        fetchAddresses();
+    </script>
+
+    
 
 	<script>
 	function applyCoupon() {
@@ -439,6 +761,6 @@
 	}
 	</script>
 
-    <%- include("../partials/user/footer") %>
+    <!-- </%- include("../partials/user/footer") %> -->
 </body>
 </html>

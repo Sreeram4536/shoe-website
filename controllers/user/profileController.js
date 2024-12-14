@@ -406,28 +406,35 @@ const addAddress = async (req,res)=>{
     }
 }
 
-const postAddAddress =async (req,res)=>{
+const postAddAddress = async (req, res) => {
     try {
-
         const userId = req.session.user;
-        const userData = await User.findOne({_id:userId});
-        const{addressType,name,city,landMark,state,pincode,phone,altPhone}=req.body;
-        const userAddress = await Address.findOne({userId:userData._id});
-        if(!userAddress){
+        const userData = await User.findOne({_id: userId});
+        const {addressType, name, city, landMark, state, pincode, phone, altPhone} = req.body;
+        
+        const userAddress = await Address.findOne({userId: userData._id});
+        
+        if (!userAddress) {
             const newAddress = new Address({
-                userId : userData._id,
-                address: [{addressType,name,city,landMark,state,pincode,phone,altPhone}]
+                userId: userData._id,
+                address: [{addressType, name, city, landMark, state, pincode, phone, altPhone}]
             });
             await newAddress.save();
-        }else{
-            userAddress.address.push({addressType,name,city,landMark,state,pincode,phone,altPhone});
+        } else {
+            userAddress.address.push({addressType, name, city, landMark, state, pincode, phone, altPhone});
             await userAddress.save();
         }
-        res.redirect("/user/userProfile")
         
+        res.json({
+            success: true,
+            message: 'Address added successfully'
+        });
     } catch (error) {
-        console.error("Error in addind address",error)
-        res.redirect("/pageNotFound")
+        console.error("Error in adding address", error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to add address'
+        });
     }
 }
 
@@ -457,36 +464,52 @@ const editAddress= async(req,res)=>{
     }
 }
 
-const postEditAddress = async(req,res)=>{
+const postEditAddress = async (req, res) => {
     try {
         const data = req.body;
-        const addressId = req.query.id;
-        const user = req.session.user;
-        const findAddress = await Address.findOne({"address._id":addressId});
-        if(!findAddress){
-            res.redirect("/pageNotFound")
+        const addressId = req.query.id || data.addressId;
+        console.log("address id is:",req.session);
+        
+
+        const findAddress = await Address.findOne({ "address._id": addressId });
+        if (!findAddress) {
+            return res.status(404).json({
+                success: false,
+                message: 'Address not found'
+            });
         }
+
+        // Update the address
         await Address.updateOne(
-            {"address._id":addressId},
-            {$set:{
-                "address.$":{
-                    _id:addressId,
-                    addressType:data.addressType,
-                    name:data.name,
-                    city:data.city,
-                    landMark:data.landMark,
-                    state:data.state,
-                    pincode:data.pincode,
-                    phone:data.phone,
-                    altPhone:data.altPhone
+            { "address._id": addressId },
+            { $set: {
+                "address.$": {
+                    _id: addressId,
+                    addressType: data.addressType,
+                    name: data.name,
+                    city: data.city,
+                    landMark: data.landMark,
+                    state: data.state,
+                    pincode: data.pincode,
+                    phone: data.phone,
+                    altPhone: data.altPhone
                 }
             }}
-        )
-        res.redirect("/user/userProfile")
+        );
+
+        // Return the updated address
+        const updatedAddress = await Address.findOne({ "address._id": addressId });
+         res.json({
+            success: true,
+            message: 'Address updated successfully',
+            updatedAddress: updatedAddress.address.find(addr => addr._id.toString() === addressId)
+        });
     } catch (error) {
-        console.error("Error in edit address",error);
-        res.redirect("/pageNotFound")
-        
+        console.error("Error in edit address", error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to update address'
+        });
     }
 }
 

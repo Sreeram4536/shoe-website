@@ -2,6 +2,8 @@ const mongoose=require('mongoose');
 const {Schema}= mongoose;
 const {v4:uuidv4}=require('uuid')
 
+
+
 const orderSchema= new mongoose.Schema({
     userId:{
         type:Schema.Types.ObjectId,
@@ -11,7 +13,7 @@ const orderSchema= new mongoose.Schema({
     
     orderId:{
         type:String,
-        default:()=>uuidv4(),
+        default:()=>uuidv4().replace(/-/g, '').slice(0, 6),
         unique:true
     },
     orderedItems:[{

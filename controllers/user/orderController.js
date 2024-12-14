@@ -242,40 +242,40 @@ const returnOrder = async (req, res) => {
     }
 };
 
-const placeOrder = async (req, res) => {
-    try {
-        const { paymentMethod, chosenAddress } = req.body;
+// const placeOrder = async (req, res) => {
+//     try {
+//         const { paymentMethod, chosenAddress } = req.body;
         
-        // Create the order
-        const order = new Order({
-            // ... your order creation logic ...
-            paymentMethod,
-            paymentStatus: paymentMethod === 'Wallet' ? 'Completed' : 'Pending',
-            status: 'Pending'
-        });
+//         // Create the order
+//         const order = new Order({
+//             // ... your order creation logic ...
+//             paymentMethod,
+//             paymentStatus: paymentMethod === 'Wallet' ? 'Completed' : 'Pending',
+//             status: 'Pending'
+//         });
 
-        await order.save();
+//         await order.save();
 
-        res.send(`
-            <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-            <script>
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Order placed successfully!',
-                    showConfirmButton: false,
-                    timer: 1500
-                }).then(() => {
-                    window.location.href = '/user/orders';
-                });
-            </script>
-        `);
-    } catch (error) {
-        console.error('Error placing order:', error);
-        res.status(500).json({
-            success: false,
-            message: error.message
-        });
-    }
-};
+//         res.send(`
+//             <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+//             <script>
+//                 Swal.fire({
+//                     icon: 'success',
+//                     title: 'Order placed successfully!',
+//                     showConfirmButton: false,
+//                     timer: 1500
+//                 }).then(() => {
+//                     window.location.href = '/user/orders';
+//                 });
+//             </script>
+//         `);
+//     } catch (error) {
+//         console.error('Error placing order:', error);
+//         res.status(500).json({
+//             success: false,
+//             message: error.message
+//         });
+//     }
+// };
 
 module.exports = { viewOrderDetails,cancelOrder,allOrdersPage,returnOrder};

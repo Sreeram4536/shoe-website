@@ -6,6 +6,7 @@ const env=require('dotenv').config()
 const nodemailer=require('nodemailer')
 const bcrypt = require('bcrypt')
 const mongoose=require('mongoose')
+const Order = require('../../models/orderSchema')
 
 // const pageNotFound = async(req,res)=>{
 //     try {
@@ -501,7 +502,7 @@ const filterByPrice = async (req,res)=>{
 const searchProduct = async(req,res)=>{
     try {
         const user = req.session.user;
-        const userData = await User.findOne({_id:user});
+        const userData =  await User.findOne({_id:user});
         let search = req.body.search?.trim() || '';
         // console.log("search is:",search);
         
@@ -522,7 +523,7 @@ const searchProduct = async(req,res)=>{
                 isBlocked:false,
                 quantity:{$gt:0},
                 category:{$in:categoryIds}
-            })
+            }).lean();
         }
         searchResult.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
 
@@ -555,7 +556,7 @@ const searchProduct = async(req,res)=>{
 const sortProducts = async (req, res) => {
     try {
         const user = req.session.user;
-        const userData = await User.findOne({_id: user});
+        const userData =  await User.findOne({_id: user});
         const order = req.query.order || 'asc'; // Default to ascending
         const categories = await Category.find({isListed: true});
         const brands = await Brand.find({isBlocked: false});
@@ -566,12 +567,15 @@ const sortProducts = async (req, res) => {
             category: {$in: categories.map(category => category._id)}
         };
 
+       
         // Sort products
-        let products;
+        let products = req.session.filteredProducts || await Product.find(query) ;
         if (order === 'asc') {
-            products = await Product.find(query).sort({ salePrice: 1 });
+            // products = req.session.filteredProducts || await Product.find(query).sort({ salePrice: 1 });
+            products.sort((a, b) => a.salePrice - b.salePrice); 
         } else {
-            products = await Product.find(query).sort({ salePrice: -1 });
+            // products = req.session.filteredProducts ||   await Product.find(query).sort({ salePrice: -1 });
+            products.sort((a, b) => b.salePrice - a.salePrice);
         }
 
         // Pagination

@@ -181,23 +181,22 @@
         });
 
         document.getElementById('downloadPDF').addEventListener('click', async () => {
-            const reportType = document.getElementById('reportType').value;
-            let url = `/admin/downloadSalesReport/pdf?reportType=${reportType}`;
-            
-            // Add start and end dates for custom report
-            if (reportType === 'custom') {
-                const startDate = document.getElementById('startDate').value;
-                const endDate = document.getElementById('endDate').value;
-                
-                if (!startDate || !endDate) {
-                    alert('Please select both start and end dates for the custom report.');
-                    return;
-                }
-                
-                url += `&startDate=${startDate}&endDate=${endDate}`;
-            }
-
             try {
+                const reportType = document.getElementById('reportType').value;
+                let url = `/admin/downloadSalesReport/pdf?reportType=${reportType}`;
+                
+                if (reportType === 'custom') {
+                    const startDate = document.getElementById('startDate').value;
+                    const endDate = document.getElementById('endDate').value;
+                    
+                    if (!startDate || !endDate) {
+                        alert('Please select both start and end dates for the custom report.');
+                        return;
+                    }
+                    
+                    url += `&startDate=${startDate}&endDate=${endDate}`;
+                }
+
                 const response = await fetch(url);
                 
                 if (!response.ok) {
@@ -208,13 +207,15 @@
                 const downloadUrl = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = downloadUrl;
-                a.download = 'sales-report.pdf';
+                a.download = `sales-report-${Date.now()}.pdf`;
                 document.body.appendChild(a);
                 a.click();
-                a.remove();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(downloadUrl);
+                
             } catch (error) {
                 console.error('Download error:', error);
-                alert('Failed to download PDF');
+                alert('Failed to download PDF. Please try again.');
             }
         });
 

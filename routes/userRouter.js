@@ -63,6 +63,7 @@ router.get('/user/orders',userAuth,orderController.allOrdersPage)
 router.post('/user/order/:orderId/cancel',userAuth,orderController. cancelOrder);
 router.get('/user/order/:orderId/cancel',userAuth,orderController. cancelOrder);
 router.post('/user/order/:orderId/return', userAuth, orderController.returnOrder);
+router.get('/user/order/:orderId/download-invoice', userAuth, orderController.downloadInvoice);
 
 
 
@@ -110,5 +111,7 @@ router.post('/user/remove-coupon',userAuth, cartController.removeCoupon);
 
 router.post('/user/create-razorpay-order', userAuth, cartController.createRazorpayOrder);
 router.post('/user/verify-payment', userAuth, cartController.verifyPayment);
+// router.post('/user/retry-payment/:orderId',userAuth,cartController. retryPayment);
+
 
 module.exports= router;

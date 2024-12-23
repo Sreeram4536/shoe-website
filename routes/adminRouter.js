@@ -92,5 +92,11 @@ router.post('/getSalesReport', adminAuth, salesController.getSalesReport);
 router.get('/downloadSalesReport/pdf', adminAuth, salesController.downloadPDF);
 router.get('/downloadSalesReport/excel', adminAuth, salesController.downloadExcel);
 
+// Dashboard route
+router.get('/dashboard', adminController.loadDashboard);
+router.get('/sales-data', adminController.getSalesData);
+router.get('/top-selling-products', adminController.getTopSellingProducts);
+router.get('/top-selling-categories', adminController.getTopSellingCategories);
+router.get('/top-selling-brands', adminController.getTopSellingBrands);
 
 module.exports=router;

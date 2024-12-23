@@ -48,6 +48,10 @@
    background-color: #0056b3;
    border-color: #0056b3;
  }
+
+ .btn-group .btn {
+   margin-right: 5px;
+ }
  </style>
 <section class="content-main">
  <div class="content-header">
@@ -163,10 +167,10 @@
                          <td class="text-start"><%= coupons[i].minimumPrice %></td>
                          <td class="text-start"><%= coupons[i].isList %></td>
                          <td class="text-start">
-                             <a href="/admin/editCoupon?id=<%= coupons[i]._id %>" class="btn btn-primary btn-sm" >Edit</a>
-
-
-                                                     <a href="javascript:void(0)" onclick="confirmDelete('<%=coupons[i]._id%>')" class="btn btn-danger btn-sm">Delete</a>
+                          <div class="btn-group">
+                            <a href="/admin/editCoupon?id=<%= coupons[i]._id %>" class="btn btn-primary btn-sm">Edit</a>
+                            <a href="javascript:void(0)" onclick="confirmDelete('<%=coupons[i]._id%>')" class="btn btn-danger btn-sm">Delete</a>
+                        </div>
                          </td>
                      </tr>
                      <% } %>
@@ -182,69 +186,61 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
- function validateForm() {
-   document.querySelectorAll(".error-message").forEach((element) => (element.innerHTML = ""));
-   const sDate = document.getElementsByName("startDate")[0].value;
-   const eDate = document.getElementsByName("endDate")[0].value;
-   const sDateObj = new Date(sDate);
-   const eDateObj = new Date(eDate);
-   const todayDateObj = new Date();
-   todayDateObj.setHours(0, 0, 0, 0);
+ function validateForm(event) {
+    event.preventDefault(); 
+    document.querySelectorAll(".error-message").forEach((element) => (element.innerHTML = ""));
+    
+    const sDate = document.getElementsByName("startDate")[0].value;
+    const eDate = document.getElementsByName("endDate")[0].value;
+    const sDateObj = new Date(sDate);
+    const eDateObj = new Date(eDate);
+    const todayDateObj = new Date();
+    todayDateObj.setHours(0, 0, 0, 0);
 
+    if (sDateObj > eDateObj) {
+        document.getElementById("error-end-date").innerHTML = "End date should be after the start date";
+        return false;
+    }
 
-   if (sDateObj > eDateObj) {
-     document.getElementById("error-end-date").innerHTML ="End date should be after the start date";
-     return false;
-   }
+    if (sDateObj <= todayDateObj) {
+        document.getElementById("error-start-date").innerHTML = "Starting date should be greater than or equal to today's date";
+        return false;
+    }
 
+    let name = document.getElementsByName("couponName")[0].value;
+    const nameRegex = /^[A-Za-z0-9]{1,50}$/;
 
-   if (sDateObj <= todayDateObj) {
-     document.getElementById("error-start-date").innerHTML ="Starting date should be greater than or equal to today's date";
-     return false;
-   }
+    if (!nameRegex.test(name)) {
+        document.getElementById("error-coupon-name").innerHTML = "Coupon Name error";
+        return false;
+    }
 
+    // Check if the coupon name already exists
+    const existingCoupons =  JSON.stringify(coupons.map(coupon => coupon.name)); // Assuming coupons is available in the template
+    if (existingCoupons.includes(name)) {
+        document.getElementById("error-coupon-name").innerHTML = "Coupon Name already exists";
+        return false;
+    }
 
-   let name = document.getElementsByName("couponName")[0].value;
-   const nameRegex = /^[A-Za-z0-9]{1,50}$/;
+    const offerPriceInput = document.getElementsByName("offerPrice")[0];
+    const minimumPriceInput = document.getElementsByName("minimumPrice")[0];
 
+    const offerPrice = offerPriceInput.value.trim() !== "" ? parseInt(offerPriceInput.value) : NaN;
+    const minimumPrice = minimumPriceInput.value.trim() !== "" ? parseInt(minimumPriceInput.value) : NaN;
 
-   if (!nameRegex.test(name)) {
-     document.getElementById("error-coupon-name").innerHTML =
-       "Coupon Name error";
-     return false;
-   }
+    if (isNaN(offerPrice) || isNaN(minimumPrice) || offerPrice >= minimumPrice) {
+        document.getElementById("error-offer-price").innerHTML = "Offer Price must be greater than Minimum Price";
+        return false;
+    }
 
+    if (isNaN(offerPrice) || isNaN(minimumPrice)) {
+        document.getElementById("error-offer-price").innerHTML = "Please enter numeric values for Offer Price and Minimum Price";
+        return false;
+    }
 
-   const offerPriceInput = document.getElementsByName("offerPrice")[0];
-   const minimumPriceInput = document.getElementsByName("minimumPrice")[0];
-
-
-   const offerPrice = offerPriceInput.value.trim() !== ""? parseInt(offerPriceInput.value): NaN;
-   const minimumPrice = minimumPriceInput.value.trim() !== ""? parseInt(minimumPriceInput.value): NaN;
-
-
-   if (isNaN(offerPrice) || isNaN(minimumPrice) || offerPrice >= minimumPrice) {
-     document.getElementById("error-offer-price").innerHTML = "Offer Price must be greater than Minimum Price";
-     return false;
-   }
-
-
-   if (isNaN(offerPrice) || isNaN(minimumPrice)) {
-     document.getElementById("error-offer-price").innerHTML ="Please enter numeric values for Offer Price and Minimum Price";
-     return false;
-   }
-
-
-       const formData = {
-       couponName: name,
-       startDate: sDateObj,
-       endDate: eDateObj,
-       offerPrice: offerPrice,
-       minimumPrice: minimumPrice
-   };
-   return true;
- }
-
+    // If all validations pass, submit the form
+    document.querySelector("form").submit();
+}
 
 function confirmDelete(couponId) {
     Swal.fire({

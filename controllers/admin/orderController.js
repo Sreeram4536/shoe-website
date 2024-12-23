@@ -8,7 +8,8 @@ const listOrders = async (req, res) => {
         const orders = await Order.find()
             .populate('userId', 'name email')
             .populate('orderedItems.product', 'productName salePrice')
-            .populate('address');
+            .populate('address')
+            .sort({ createdOn: -1 });
         res.render('admin/orderList', { orders });
     } catch (error) {
         console.error('Error fetching orders:', error);

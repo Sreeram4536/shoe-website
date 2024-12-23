@@ -116,6 +116,22 @@
         .me-2 {
             margin-right: 0.5rem;
         }
+
+
+        
+        .btn-primary {
+            background-color: #487379;
+            border-color: #487379;
+        }
+        
+        .btn-primary:hover {
+            background-color: #3a5c61;
+            border-color: #3a5c61;
+        }
+        
+        .fa-file-download {
+            margin-right: 5px;
+        }
     </style>
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
 </head>
@@ -209,6 +225,12 @@
 
                         <!-- Action Buttons -->
                         <div class="text-center">
+                            <% if (order.status !== 'Cancelled') { %>
+                                <a href="/user/order/<%= order._id %>/download-invoice" 
+                                   class="btn btn-primary me-2">
+                                    <i class="fas fa-file-download"></i> Download Invoice
+                                </a>
+                            <% } %>
                             <% if (order.status === 'Pending') { %>
                                 <button onclick="confirmCancel('<%= order._id %>')" 
                                         class="btn btn-danger me-2">
@@ -219,6 +241,11 @@
                                 <button onclick="confirmReturn('<%= order._id %>','<%=order.finalAmount %>')" 
                                         class="btn btn-warning me-2">
                                     Return Order
+                                </button>
+                            <% } %>
+                            <% if (order.status === 'Pending' && order.paymentMethod === 'RazorPay') { %>
+                                <button onclick="retryPayment('<%= order._id %>', '<%= order.finalAmount %>')" class="btn btn-warning me-2">
+                                    Retry Payment
                                 </button>
                             <% } %>
                             <button onclick="goBack()" class="btn btn-secondary">Back to Orders</button>
@@ -237,7 +264,7 @@
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <script>
          document.addEventListener('DOMContentLoaded', function() {
              const errorMessage = '<%= errorMessage %>';
@@ -414,6 +441,108 @@
                 }
             });
         }
+
+        // Function to retry Razorpay payment
+function retryPayment(orderId, amount) {
+    showLoading('Retrying payment...');
+
+    fetch('/user/create-razorpay-order', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            orderId: orderId, // Existing Order ID
+            amount: amount * 100 // Amount in paise
+        })
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(errorData => {
+            console.error('Server Error:', errorData);
+            throw new Error(errorData.message || 'Failed to initiate Razorpay order for retry.');
+        }).catch(() => {
+            // If response isn't valid JSON, log the raw response
+            console.error('Failed to parse error response:', response.statusText);
+            throw new Error('Failed to initiate Razorpay order for retry.');
+        });
+            
+            // throw new Error('Failed to initiate Razorpay order for retry.');
+        }
+        return response.json();
+    })
+    .then(razorpayOrder => {
+        const options = {
+            key: '<%= process.env.RAZORPAY_KEY_ID %>',
+            amount: amount * 100,
+            currency: 'INR',
+            name: 'Downy Shoes',
+            description: 'Order Payment Retry',
+            order_id: razorpayOrder.id, // Use the Razorpay order ID
+            handler: async function (response) {
+                // Verify the retried payment
+                const verifyResponse = await fetch('/user/verify-payment', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_signature: response.razorpay_signature,
+                        orderId: orderId
+                    })
+                });
+
+                const verifyResult = await verifyResponse.json();
+
+                if (verifyResult.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Payment Successful',
+                        text: 'Your payment has been successfully retried!',
+                        showConfirmButton: false,
+                        timer: 1500
+                    }).then(() => {
+                        window.location.href = `/user/order-success?orderId=${orderId}`;
+                    });
+                } else {
+                    throw new Error('Payment verification failed');
+                }
+            },
+            prefill: {
+                name: '',
+                email: ''
+            },
+            theme: {
+                color: '#3399cc'
+            }
+        };
+
+        const rzp = new Razorpay(options);
+        rzp.open();
+
+        // Handle Razorpay payment failure during retry
+        rzp.on('payment.failed', function (response) {
+            console.error('Retry Payment Failed:', response);
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Payment Failed',
+                text: 'Retry payment failed. Please try again later.'
+            });
+        });
+    })
+    .catch(error => {
+        console.error('Error in retryPayment:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Retry Payment Failed',
+            text: error.message || 'An error occurred while retrying the payment.'
+        });
+    });
+}
+
     </script>
 
     <!-- Bootstrap JS -->

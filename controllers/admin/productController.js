@@ -211,7 +211,8 @@ const removeProductOffer = async(req,res)=>{
         const {productId}=req.body
         const findProduct = await Product.findOne({_id:productId});
         const  percentage=findProduct.productOffer;
-        findProduct.salePrice=findProduct.salePrice+Math.floor(findProduct.regularPrice*(percentage/100));
+        // findProduct.salePrice=findProduct.salePrice+Math.floor(findProduct.regularPrice*(percentage/100));
+        findProduct.salePrice=findProduct.regularPrice;
         findProduct.productOffer=0;
         await findProduct.save();
         res.json({status:true})

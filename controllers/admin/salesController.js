@@ -1,6 +1,10 @@
 const Order = require('../../models/orderSchema');
 const ExcelJS = require('exceljs');
 const PDFDocument = require('pdfkit');
+// const { Table } = require('pdfkit-table');
+// const pdf = require('html-pdf')
+const {jsPDF} = require('jspdf');
+require('jspdf-autotable');
 
 // Add the missing calculateSalesSummary function
 const calculateSalesSummary = async (salesData) => {
@@ -187,7 +191,7 @@ const downloadExcel = async (req, res) => {
             .populate({
                 path: 'orderedItems.product',
                 model: 'Product',  // Explicitly specify the model name
-                select: 'name price'  // Select specific fields you want
+                select: 'productName price'  // Select specific fields you want
             })
             .sort({ createdOn: -1 });
 
@@ -216,7 +220,7 @@ const downloadExcel = async (req, res) => {
                 date: new Date(order.createdOn).toLocaleDateString(),
                 customerName: order.userId ? order.userId.name : 'N/A',
                 products: order.orderedItems.map(item =>
-                    `${item.product ? item.product.name : 'N/A'} (${item.quantity} x ₹${item.price})`
+                    `${item.product ? item.product.productName : 'N/A'} (${item.quantity} x ₹${item.price})`
                 ).join(', '),
                 totalPrice: order.totalPrice,
                 discount: order.discount || 0,
@@ -248,37 +252,35 @@ const downloadExcel = async (req, res) => {
 
 const downloadPDF = async (req, res) => {
     try {
-        console.log('PDF Download Query:', req.query);
-
         const { reportType, startDate, endDate } = req.query;
-
-        // Determine date range based on report type
-        let dateQuery = {
-            status: 'Delivered'
-        };
+        let dateQuery = { status: 'Delivered' };
         const now = new Date();
 
+        // Determine date range based on report type
         switch (reportType) {
             case 'daily':
-                dateQuery.createdOn = { 
+                dateQuery.createdOn = {
                     $gte: new Date(now.setHours(0, 0, 0, 0)),
                     $lte: new Date(now.setHours(23, 59, 59, 999))
                 };
                 break;
+
             case 'weekly':
                 const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
-                dateQuery.createdOn = { 
+                dateQuery.createdOn = {
                     $gte: new Date(startOfWeek.setHours(0, 0, 0, 0)),
                     $lte: new Date()
                 };
                 break;
+
             case 'monthly':
                 const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-                dateQuery.createdOn = { 
+                dateQuery.createdOn = {
                     $gte: startOfMonth,
                     $lte: new Date()
                 };
                 break;
+
             case 'custom':
                 if (startDate && endDate) {
                     dateQuery.createdOn = {
@@ -294,91 +296,235 @@ const downloadPDF = async (req, res) => {
             .populate('userId', 'name email')
             .populate({
                 path: 'orderedItems.product',
-                model: 'Product',  // Explicitly specify the model name
-                select: 'productName price'  // Select specific fields you want
+                model: 'Product',
+                select: 'productName price'
             })
             .sort({ createdOn: -1 });
 
-        // Add more detailed logging to diagnose population
-        console.log("Sales Data Length:", salesData.length);
-        salesData.forEach((order, index) => {
-            console.log(`Order ${index} Ordered Items:`, order.orderedItems.map(item => ({
-                productId: item.product ? item.product._id : 'No Product',
-                productName: item.product ? item.product.productName : 'Undefined',
-                quantity: item.quantity,
-                price: item.price
-            })));
-        });
-
-        // Calculate summary
         const summary = await calculateSalesSummary(salesData);
 
-        // Use a Unicode-compatible font
-        const doc = new PDFDocument({
-            fonts: ['Helvetica', 'Times-Roman'], // Add more font options
-            autoFirstPage: true
+        // Create new PDF document
+        const doc = new jsPDF({
+            orientation: 'portrait',
+            unit: 'mm',
+            format: 'a4'
         });
 
-        // Optional: Register a font that supports Unicode
-        // doc.registerFont('DejaVu', 'path/to/DejaVuSans.ttf');
-       
+        // Add title
+        doc.setFontSize(18);
+        doc.text('Sales Report', doc.internal.pageSize.width/2, 15, { align: 'center' });
+        
+        // Add report info
+        doc.setFontSize(11);
+        doc.text(`Report Type: ${reportType.charAt(0).toUpperCase() + reportType.slice(1)}`, 14, 25);
+        doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 32);
+
+        // Prepare table data
+        const tableData = salesData.map(order => [
+            order.orderId,
+            new Date(order.createdOn).toLocaleDateString(),
+            order.userId ? order.userId.name : 'N/A',
+            `${order.totalPrice.toFixed(2)}/-`,
+            `${order.discount ? order.discount.toFixed(2) : '0.00'}/-   `,
+            `${order.finalAmount.toFixed(2)}/-`,
+            order.paymentMethod
+        ]);
+
+        // Add table
+        doc.autoTable({
+            startY: 40,
+            head: [[
+                'Order ID',
+                'Date',
+                'Customer',
+                'Total Price',
+                'Discount',
+                'Final Amount',
+                'Payment'
+            ]],
+            body: tableData,
+            theme: 'grid',
+            headStyles: {
+                fillColor: [51, 51, 51],
+                textColor: 255,
+                fontSize: 10
+            },
+            styles: {
+                fontSize: 9,
+                cellPadding: 3
+            },
+            columnStyles: {
+                0: { cellWidth: 25 },
+                1: { cellWidth: 25 },
+                2: { cellWidth: 35 },
+                3: { cellWidth: 25 },
+                4: { cellWidth: 25 },
+                5: { cellWidth: 25 },
+                6: { cellWidth: 25 }
+            }
+        });
+
+        // Add summary on new page
+        doc.addPage();
+        doc.setFontSize(16);
+        doc.text('Summary', doc.internal.pageSize.width/2, 15, { align: 'center' });
+
+        // Add summary table
+        doc.autoTable({
+            startY: 25,
+            head: [['Metric', 'Value']],
+            body: [
+                ['Total Orders', summary.totalOrders.toString()],
+                ['Total Sales', `${summary.totalSales.toFixed(2)}/-`],
+                ['Total Discount', `${summary.totalDiscount.toFixed(2)}/-`],
+                ['Average Order Value', `${summary.averageOrderValue.toFixed(2)}/-`]
+            ],
+            theme: 'grid',
+            headStyles: {
+                fillColor: [51, 51, 51],
+                textColor: 255
+            },
+            styles: {
+                halign: 'left'
+            },
+            columnStyles: {
+                0: { cellWidth: 80 },
+                1: { cellWidth: 80 }
+            }
+        });
+
+        // Convert PDF to buffer
+        const pdfBuffer = Buffer.from(doc.output('arraybuffer'));
+
+        // Set response headers
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename=sales-report-${Date.now()}.pdf`);
+        res.setHeader('Content-Length', pdfBuffer.length);
 
-        doc.pipe(res);
-
-        // Title
-        doc.fontSize(20).font('Helvetica').text('Sales Report', { align: 'center' });
-        doc.moveDown();
-
-        // Sales Data
-        salesData.forEach(order => {
-            doc.fontSize(12).font('Helvetica')
-                .text(`Order ID: ${order.orderId}`)
-                .text(`Date: ${new Date(order.createdOn).toLocaleDateString()}`)
-                .text(`Customer: ${order.userId ? order.userId.name : 'N/A'}`);
-            
-            // Products with Unicode Rupee symbol
-            doc.text('Products:');
-            order.orderedItems.forEach(item => {
-                const productName = item.product && item.product.productName 
-                    ? item.product.productName 
-                    : 'Product Not Found';
-                const productPrice = item.product && item.product.salePrice 
-                    ? item.product.salePrice 
-                    : item.price || 0;
-                const quantity = item.quantity || 1;
-                
-                // Use Unicode Rupee symbol directly
-                doc.text(`- ${productName} (${quantity} x ${Number(productPrice).toFixed(2)}/-)`);
-            });
-            
-            // Use Unicode Rupee symbol for prices
-            doc.text(`Total Price: ${Number(order.totalPrice).toFixed(2)}/-`)
-               .text(`Discount: ${Number(order.discount || 0).toFixed(2)}/-`)
-               .text(`Final Amount: ${Number(order.finalAmount).toFixed(2)}/-`)
-               .text(`Payment Method: ${order.paymentMethod}`);
-            
-            doc.moveDown();
-        });
-
-        // Summary
-        doc.fontSize(14).text('Summary', { align: 'center' });
-        doc.moveDown();
-        doc.fontSize(12)
-            .text(`Total Orders: ${summary.totalOrders}`)
-            .text(`Total Sales: ${Number(summary.totalSales).toFixed(2)}/-`)
-            .text(`Total Discount: ${Number(summary.totalDiscount).toFixed(2)}/-`);
-
-        doc.end();
+        // Send PDF
+        res.send(pdfBuffer);
 
     } catch (error) {
-        console.error('Error downloading PDF:', error);
-        res.status(500).send('Error generating PDF: ' + error.message);
+        console.error('Error generating PDF:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error generating PDF',
+            error: error.message
+        });
     }
 };
 
 
+// const downloadPDF = async (req, res) => {
+//     try {
+//         const { reportType, startDate, endDate } = req.query;
+
+//         // Determine date range based on report type
+//         let dateQuery = {
+//             status: 'Delivered'
+//         };
+//         const now = new Date();
+
+//         switch (reportType) {
+//             case 'daily':
+//                 dateQuery.createdOn = {
+//                     $gte: new Date(now.setHours(0, 0, 0, 0)),
+//                     $lte: new Date(now.setHours(23, 59, 59, 999))
+//                 };
+//                 break;
+
+//             case 'weekly':
+//                 const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
+//                 dateQuery.createdOn = {
+//                     $gte: new Date(startOfWeek.setHours(0, 0, 0, 0)),
+//                     $lte: new Date()
+//                 };
+//                 break;
+
+//             case 'monthly':
+//                 const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+//                 dateQuery.createdOn = {
+//                     $gte: startOfMonth,
+//                     $lte: new Date()
+//                 };
+//                 break;
+
+//             case 'custom':
+//                 if (startDate && endDate) {
+//                     dateQuery.createdOn = {
+//                         $gte: new Date(startDate),
+//                         $lte: new Date(new Date(endDate).setHours(23, 59, 59, 999))
+//                     };
+//                 }
+//                 break;
+//         }
+
+//         // Fetch sales data with more robust population
+//         const salesData = await Order.find(dateQuery)
+//             .populate('userId', 'name email')
+//             .populate({
+//                 path: 'orderedItems.product',
+//                 model: 'Product',
+//                 select: 'productName price'
+//             })
+//             .sort({ createdOn: -1 });
+
+//         // Calculate summary
+//         const summary = await calculateSalesSummary(salesData);
+
+//         const doc = new PDFDocument({ margin: 30, size: 'A4' });
+//         res.setHeader('Content-Type', 'application/pdf');
+//         res.setHeader('Content-Disposition', `attachment; filename=sales-report-${Date.now()}.pdf`);
+//         doc.pipe(res);
+
+//         // Add title
+//         doc.fontSize(20).text('Sales Report', { align: 'center' });
+//         doc.moveDown();
+
+//         // Create table data
+//         const tableData = {
+//             headers: ['Order ID', 'Date', 'Customer', 'Products', 'Total', 'Discount', 'Final Amount'],
+//             rows: salesData.map(order => [
+//                 order.orderId,
+//                 new Date(order.createdOn).toLocaleDateString(),
+//                 order.userId?.name || 'N/A',
+//                 order.orderedItems.map(item => 
+//                     `${item.product?.productName || 'N/A'} (x${item.quantity})`
+//                 ).join(', '),
+//                 `₹${order.totalPrice?.toFixed(2) || '0.00'}`,
+//                 `₹${(order.discount || 0).toFixed(2)}`,
+//                 `₹${order.finalAmount?.toFixed(2) || '0.00'}`
+//             ])
+//         };
+
+//         // Draw the table
+//         await doc.table(tableData, {
+//             prepareHeader: () => doc.font('Helvetica-Bold').fontSize(10),
+//             prepareRow: () => doc.font('Helvetica').fontSize(10),
+//             width: 550,
+//             padding: 5,
+//             divider: {
+//                 header: { disabled: false, width: 2, opacity: 1 },
+//                 horizontal: { disabled: false, width: 0.5, opacity: 0.5 }
+//             }
+//         });
+
+//         // Add summary
+//         doc.addPage();
+//         doc.fontSize(14).text('Summary', { align: 'center' });
+//         doc.moveDown();
+//         doc.fontSize(12)
+//             .text(`Total Orders: ${summary.totalOrders}`)
+//             .text(`Total Sales: ₹${summary.totalSales.toFixed(2)}`)
+//             .text(`Total Discount: ₹${summary.totalDiscount.toFixed(2)}`)
+//             .text(`Average Order Value: ₹${summary.averageOrderValue.toFixed(2)}`);
+
+//         doc.end();
+//     } catch (error) {
+//         console.error('Error downloading PDF:', error);
+//         res.status(500).send('Error generating PDF: ' + error.message);
+//     }
+// };
 
 // Export individual functions instead of an object
 module.exports = { 

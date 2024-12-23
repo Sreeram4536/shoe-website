@@ -237,6 +237,18 @@
 										<td class="text-end">₹<span id="subtotal"><%= totalAmount %></span></td>
 									</tr>
 									
+									<!-- Delivery Charge Row -->
+									<tr>
+										<td colspan="2" class="text-end">Delivery Charge:</td>
+										<td class="text-end">₹<span id="deliveryCharge">0</span></td> <!-- Example delivery charge -->
+									</tr>
+
+									<!-- GST Row -->
+									<tr>
+										<td colspan="2" class="text-end">GST (18%):</td>
+										<td class="text-end">₹<span id="gstAmount"><%= (totalAmount * 0.18).toFixed(2) %></span></td>
+									</tr>
+
 									<!-- Discount Row (Initially Hidden) -->
 									<tr id="discountRow" style="display: none;">
 										<td colspan="2" class="text-end">
@@ -259,7 +271,12 @@
 									<!-- Grand Total Row -->
 									<tr class="fw-bold">
 										<td colspan="2" class="text-end">Grand Total:</td>
-										<td class="text-end"><span id="grandTotal"><%= totalAmount %></span></td>
+										<td class="text-end">
+											<span id="grandTotal">
+												<%= (totalAmount + 0 ).toFixed(2) %> <!-- Total including delivery and GST -->
+											</span>
+											</span>
+										</td>
 									</tr>
 								</tbody>
 							</table>
@@ -267,21 +284,22 @@
 					</div>
 				</div>
 	
-				<!-- Coupon Section -->
+				<!-- Coupon Selection Section -->
 				<div class="card shadow-sm mb-4">
 					<div class="card-header bg-white">
-						<h5 class="mb-0">Apply Coupon</h5>
+						<h5 class="mb-0">Select a Coupon</h5>
 					</div>
 					<div class="card-body">
-						<div class="row align-items-center">
-							<div class="col-md-6">
-								<div class="input-group">
-									<input type="text" id="couponCode" class="form-control" placeholder="Enter coupon code">
-									<button class="btn btn-primary" type="button" onclick="applyCoupon()">Apply</button>
-								</div>
-								<small id="couponMessage" class="text-muted"></small>
-							</div>
+						<div class="input-group">
+							<select id="couponSelect" class="form-select">
+								<option value="">Select a coupon</option>
+								<% allCoupons.forEach(coupon => { %>
+									<option value="<%= coupon.name %>"> <%= coupon.name %> - Offer: ₹<%= coupon.offerPrice %></option>
+								<% }) %>
+							</select>
+							<button class="btn btn-primary" type="button" onclick="applyCoupon()">Apply Coupon</button>
 						</div>
+						<small id="couponMessage" class="text-muted"></small>
 					</div>
 				</div>
 	
@@ -393,6 +411,7 @@
 					<div class="mb-3">
 						<label for="name" class="form-label">Full Name</label>
 						<input type="text" class="form-control" id="name" name="name" required>
+						<div class="invalid-feedback" id="nameError">Please enter a valid name (at least 3 alphabets).</div>
 					</div>
 					<div class="mb-3">
 						<label for="city" class="form-label">City</label>
@@ -496,42 +515,106 @@ document.addEventListener("DOMContentLoaded", () => {
     // });
 
 	document.getElementById("addAddressForm").addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const formData = new FormData(event.target);
-    const mode = event.target.dataset.mode; // Get the mode (add or edit)
+      event.preventDefault();
+      const formData = new FormData(event.target);
+      const mode = event.target.dataset.mode; // Get the mode (add or edit)
 
-    try {
+      // Clear previous error messages
+      const errorFields = document.querySelectorAll('.invalid-feedback');
+      errorFields.forEach(error => error.style.display = 'none');
+      
+      let isValid = true;
+
+      // Get form values
+      const name = document.getElementById("name").value;
+      const phone = document.getElementById("phone").value;
+      const pincode = document.getElementById("pincode").value;
+      const altPhone = document.getElementById("altPhone").value;
+      const city = document.getElementById("city").value;
+      const state = document.getElementById("state").value;
+      const landMark = document.getElementById("landMark").value;
+
+      // Validate name (should be at least 3 alphabets)
+      const namePattern = /^[a-zA-Z\s]{3,}$/;
+      if (!name || !namePattern.test(name)) {
+        document.getElementById("nameError").style.display = 'block';
+        isValid = false;
+      }
+
+      // Validate pincode (should be 6 digits)
+      const pincodePattern = /^[0-9]{6}$/;
+      if (!pincode || !pincodePattern.test(pincode)) {
+        document.getElementById("pincodeError").style.display = 'block';
+        isValid = false;
+      }
+
+      // Validate phone (should be 10 digits)
+      const phonePattern = /^[0-9]{10}$/;
+      if (!phone || !phonePattern.test(phone)) {
+        document.getElementById("phoneError").style.display = 'block';
+        isValid = false;
+      }
+
+      // Validate alternate phone (if entered, it should be 10 digits)
+      if (altPhone && !phonePattern.test(altPhone)) {
+        document.getElementById("altPhoneError").style.display = 'block';
+        isValid = false;
+      }
+
+      // Validate city (should not be empty)
+      if (!city.trim()) {
+        document.getElementById("cityError").style.display = 'block';
+        isValid = false;
+      }
+
+      // Validate state (should not be empty)
+      if (!state.trim()) {
+        document.getElementById("stateError").style.display = 'block';
+        isValid = false;
+      }
+
+      // Landmark is optional but can be validated for length if needed
+      if (landMark && landMark.length > 100) {
+        document.getElementById("landMarkError").style.display = 'block';
+        isValid = false;
+      }
+
+      if (!isValid) {
+        return; // Stop if validation fails
+      }
+
+      try {
         let response;
         if (mode === 'edit') {
-            // If in edit mode, send a PUT request to update the address
-            response = await fetch(`/user/editAddress?id=${document.getElementById("addressId").value}`, {
-                method: "POST",
-                body: new URLSearchParams(formData),
-            });
+          // If in edit mode, send a PUT request to update the address
+          response = await fetch(`/user/editAddress?id=${document.getElementById("addressId").value}`, {
+            method: "POST",
+            body: new URLSearchParams(formData),
+          });
         } else {
-            // If in add mode, send a POST request to add the address
-            response = await fetch('/user/addAddress', {
-                method: "POST",
-                body: new URLSearchParams(formData),
-            });
+          // If in add mode, send a POST request to add the address
+          response = await fetch('/user/addAddress', {
+            method: "POST",
+            body: new URLSearchParams(formData),
+          });
         }
 
         const result = await response.json();
 
         if (result.success) {
-            // Show success alert
-            Swal.fire("Success", mode === 'edit' ? "Address updated successfully" : "Address added successfully", "success").then(() => {
-                fetchAddresses(); // Refresh the address list
-                closeModal(); // Close the modal after adding/updating the address
-            });
+          // Show success alert
+          Swal.fire("Success", mode === 'edit' ? "Address updated successfully" : "Address added successfully", "success").then(() => {
+            fetchAddresses(); // Refresh the address list
+            closeModal(); // Close the modal after adding/updating the address
+          });
         } else {
-            Swal.fire("Error", result.message, "error"); // Show error alert
+          Swal.fire("Error", result.message, "error"); // Show error alert
         }
-        
-    } catch (error) {
+
+      } catch (error) {
         Swal.fire("Error", "Failed to save address", "error"); // Show error alert
-    }
-});
+      }
+    });
 
     // Function to update the address list in the UI
     function updateAddressList(updatedAddress) {
@@ -632,18 +715,14 @@ async function fetchAddresses() {
 
 	<script>
 	function applyCoupon() {
-		console.log("Apply button clicked");
-		const couponCode = document.getElementById('couponCode').value;
+		const couponCode = document.getElementById('couponSelect').value;
 		const totalAmount = parseFloat(document.getElementById('grandTotal').textContent.replace('₹', ''));
 
-		console.log("Coupon Code:", couponCode);
-		console.log("Total Amount:", totalAmount);
-
-		if (!couponCode.trim()) {
+		if (!couponCode) {
 			Swal.fire({
 				icon: 'warning',
-				title: 'Empty Coupon',
-				text: 'Please enter a coupon code',
+				title: 'No Coupon Selected',
+				text: 'Please select a coupon to apply.',
 			});
 			return;
 		}
@@ -660,34 +739,23 @@ async function fetchAddresses() {
 		})
 		.then(response => response.json())
 		.then(data => {
-			console.log("Response received:", data);
-			
 			if (data.success) {
-				// Show discount row
+				// Update the UI with the discount and final amount
 				document.getElementById('discountRow').style.display = 'table-row';
-				
-				// Update discount amount and coupon code
 				document.getElementById('discountAmount').textContent = data.discount;
 				document.getElementById('appliedCouponCode').textContent = couponCode;
-				
-				// Update grand total
 				document.getElementById('grandTotal').textContent = '₹' + data.finalAmount;
 
 				Swal.fire({
-					icon: 'success',
-					title: 'Coupon Applied Successfully!',
-					text: `Discount of ₹${data.discount} has been applied to your order.`,
-					showConfirmButton: true
-				});
+						icon: 'success',
+						title: 'Coupon Applied Successfully!',
+						text: `Discount of ₹${data.discount} has been applied to your order.`,
+					});
 			} else {
-				// Hide discount row
-				document.getElementById('discountRow').style.display = 'none';
-				
 				Swal.fire({
 					icon: 'error',
 					title: 'Coupon Error',
 					text: data.message,
-					showConfirmButton: true
 				});
 			}
 		})
@@ -697,7 +765,6 @@ async function fetchAddresses() {
 				icon: 'error',
 				title: 'Error',
 				text: 'An error occurred while applying the coupon. Please try again.',
-				showConfirmButton: true
 			});
 		});
 	}

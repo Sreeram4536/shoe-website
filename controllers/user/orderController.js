@@ -4,6 +4,7 @@ const Address = require('../../models/addressSchema');
 const User = require('../../models/userSchema')
 const mongoose = require('mongoose');
 const Wallet = require('../../models/walletSchema');
+const PDFDocument = require('pdfkit');
 
 const viewOrderDetails = async (req, res) => {
     try {
@@ -242,6 +243,181 @@ const returnOrder = async (req, res) => {
     }
 };
 
+const downloadInvoice = async (req, res) => {
+    try {
+        const orderId = req.params.orderId;
+        const order = await Order.findById(orderId)
+            .populate('orderedItems.product')
+            .populate('userId');
+
+        if (!order) {
+            return res.status(404).send('Order not found');
+        }
+
+        // Get delivery address
+        const addressDoc = await Address.findOne(
+            { userId: order.userId._id, "address._id": order.address },
+            { "address.$": 1 }
+        );
+
+        // Create PDF document with larger margins
+        const doc = new PDFDocument({ 
+            margin: 50,
+            size: 'A4'
+        });
+
+        // Set response headers
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=invoice-${order.orderId}.pdf`);
+        doc.pipe(res);
+
+        // Helper function for lines
+        function drawLine(doc, startX, startY, endX, endY) {
+            doc.moveTo(startX, startY)
+               .lineTo(endX, endY)
+               .stroke();
+        }
+
+        // Store Header
+        doc.fontSize(25)
+           .font('Helvetica-Bold')
+           .fillColor('#487379')
+           .text('DOWNY SHOES', { align: 'center' })
+           .fontSize(12)
+           .fillColor('#666666')
+           .text('Premium Footwear Store', { align: 'center' })
+           .moveDown();
+
+        drawLine(doc, 50, doc.y, 550, doc.y);
+        doc.moveDown();
+
+        // Invoice Title
+        doc.fontSize(20)
+           .fillColor('#333333')
+           .text('INVOICE', { align: 'center' })
+           .moveDown();
+
+        // Order & Shipping Details in columns
+        const rightColumn = 300;
+        doc.fontSize(12)
+           .font('Helvetica-Bold')
+           .text('Order Details:', 50)
+           .font('Helvetica')
+           .moveDown(0.5)
+           .text(`Order ID: #${order.orderId}`)
+           .text(`Date: ${new Date(order.createdOn).toLocaleDateString()}`)
+           .text(`Payment Method: ${order.paymentMethod}`)
+           .text(`Payment Status: ${order.paymentStatus}`);
+
+        doc.fontSize(12)
+           .font('Helvetica-Bold')
+           .text('Ship To:', rightColumn, doc.y - 85)
+           .font('Helvetica')
+           .text(addressDoc.address[0].name, rightColumn)
+           .text(addressDoc.address[0].city, rightColumn)
+           .text(addressDoc.address[0].landMark, rightColumn)
+           .text(`${addressDoc.address[0].state}, ${addressDoc.address[0].pincode}`, rightColumn)
+           .text(`Phone: ${addressDoc.address[0].phone}`, rightColumn)
+           .moveDown();
+
+        // Products Table
+        drawLine(doc, 50, doc.y, 550, doc.y);
+        doc.moveDown();
+
+        // Table headers with background
+        const tableTop = doc.y;
+        doc.fillColor('#487379')
+           .rect(50, tableTop, 500, 25)
+           .fill();
+
+        // Table header text
+        doc.fillColor('#FFFFFF')
+           .fontSize(12)
+           .font('Helvetica-Bold')
+           .text('Product', 60, tableTop + 7)
+           .text('Quantity', 270, tableTop + 7)
+           .text('Price', 370, tableTop + 7)
+           .text('Total', 470, tableTop + 7);
+
+        // Reset text color for items
+        doc.fillColor('#000000');
+
+        // Table content with alternate row colors
+        let yPos = tableTop + 30;
+        order.orderedItems.forEach((item, index) => {
+            // Alternate row background
+            if (index % 2 === 0) {
+                doc.fillColor('#f6f6f6')
+                   .rect(50, yPos - 5, 500, 25)
+                   .fill();
+            }
+
+            doc.fillColor('#000000')
+               .fontSize(10)
+               .font('Helvetica')
+               .text(item.product.productName.substring(0, 30), 60, yPos)
+               .text(item.quantity.toString(), 270, yPos)
+               .text(`${item.price.toFixed(2)}`, 370, yPos)
+               .text(`${(item.quantity * item.price).toFixed(2)}`, 470, yPos);
+
+            yPos += 25;
+        });
+
+        // Add line after items
+        drawLine(doc, 50, yPos + 10, 550, yPos + 10);
+
+        // Totals section
+        yPos += 20;
+        doc.font('Helvetica')
+           .fontSize(10)
+           .text('Subtotal:', 370, yPos)
+           .text(`Rs.${order.totalPrice.toFixed(2)}`, 470, yPos);
+
+        yPos += 20;
+        doc.text('Discount:', 370, yPos)
+           .text(`${order.discount.toFixed(2)}`, 470, yPos);
+
+        yPos += 25;
+        doc.font('Helvetica-Bold')
+           .fontSize(12)
+           .text('Final Amount:', 370, yPos)
+           .text(`Rs.${order.finalAmount.toFixed(2)}`, 470, yPos);
+
+        // Footer (positioned at bottom)
+        const footerTop = doc.page.height - 50;
+        doc.fontSize(10)
+           .font('Helvetica')
+           .fillColor('#666666');
+
+        // Footer border
+        drawLine(doc, 50, footerTop - 10, 550, footerTop - 10);
+
+        // Footer content centered
+        doc.text('Thank you for shopping with Downy Shoes!', {
+            align: 'center',
+            width: 500,
+            continued: true
+        })
+        .moveDown(0.5)
+        .text('For any queries, please contact: support@downyshoes.com', {
+            align: 'center',
+            width: 500
+        })
+        .moveDown(0.5)
+        .text('Visit us at: www.downyshoes.com', {
+            align: 'center',
+            width: 500
+        });
+
+        // Finalize PDF
+        doc.end();
+
+    } catch (error) {
+        console.error('Error generating invoice:', error);
+        res.status(500).send('Error generating invoice');
+    }
+};
+
 // const placeOrder = async (req, res) => {
 //     try {
 //         const { paymentMethod, chosenAddress } = req.body;
@@ -278,4 +454,4 @@ const returnOrder = async (req, res) => {
 //     }
 // };
 
-module.exports = { viewOrderDetails,cancelOrder,allOrdersPage,returnOrder};
+module.exports = { viewOrderDetails,cancelOrder,allOrdersPage,returnOrder,downloadInvoice};

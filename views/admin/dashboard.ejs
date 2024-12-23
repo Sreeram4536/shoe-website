@@ -1,10 +1,344 @@
-<%- include("../partials/admin/header") %>
-<section class="content-main">
-    <div class="content-header">
-        <div>
-            <h2 class="content-title card-title">Dashboard </h2>
+<%- include('../../views/partials/admin/header') %>
+<style>
+    body {
+        background-color: #f4f4f9;
+        color: #333;
+        font-family: 'Arial', sans-serif;
+        overflow-x: hidden;
+    }
+
+    /* Sidebar */
+    .sidebar {
+        width: 220px; /* Reduced width */
+        height: 100vh;
+        position: fixed;
+        top: 0;
+        left: 0;
+        background-color: #2c3e50; /* Darker color for sidebar */
+        padding-top: 20px;
+        overflow-y: auto;
+        transition: width 0.3s;
+    }
+
+    .sidebar h3 {
+        color: #fff;
+        text-align: center;
+        font-size: 24px;
+        margin-bottom: 20px;
+    }
+
+    .sidebar a {
+        padding: 15px;
+        text-decoration: none;
+        font-size: 18px;
+        color: #ddd;
+        display: block;
+        transition: background-color 0.3s;
+    }
+
+    .sidebar a:hover {
+        background-color: #2980b9; /* Lighter blue on hover */
+    }
+
+    .sidebar .active {
+        background-color: #27ae60; /* Green for active link */
+        color: #fff;
+    }
+
+    /* Header */
+    .header {
+        background-color: #27ae60; /* Green header */
+        padding: 15px 20px; /* Reduced padding */
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: fixed;
+        top: 0;
+        left: 220px; /* Adjusted for reduced sidebar width */
+        width: calc(100% - 220px);
+        z-index: 1;
+    }
+
+    /* Main content */
+    .main-content {
+        margin-left: 90px; /* Adjusted for reduced sidebar width */
+        padding: 40px 120px 20px; /* Adjusted padding */
+    }
+
+    /* Cards */
+    .card {
+        background-color: #ffffff;
+        border: none;
+        color: #333;
+        margin: 10px 0;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .sales-card {
+        background-color: #e8f5e9; /* Light green background for today's sales */
+        border: 2px solid #27ae60; /* Green border */
+        border-radius: 8px;
+        padding: 15px;
+        text-align: center;
+        transition: transform 0.3s;
+    }
+
+    .sales-card:hover {
+        transform: scale(1.05); /* Scale effect on hover */
+    }
+
+    .monthly-sales-card {
+        background-color: #e3f2fd; /* Light blue background for monthly sales */
+        border: 2px solid #2196f3; /* Blue border */
+        border-radius: 8px;
+        padding: 15px;
+        text-align: center;
+        transition: transform 0.3s;
+    }
+
+    .monthly-sales-card:hover {
+        transform: scale(1.05); /* Scale effect on hover */
+    }
+
+    /* Chart */
+    .chart-container {
+        padding: 20px;
+        background-color: #ffffff;
+        border-radius: 8px;
+        margin-top: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        background-color: #f1f8e9; /* Light background for chart */
+    }
+
+    /* Filter Section */
+    .filter-section {
+        display: flex;
+        align-items: center;
+        margin-top: 20px;
+    }
+
+    .filter-section select,
+    .filter-section input {
+        margin-right: 10px;
+        padding: 8px;
+        border-radius: 4px;
+        border: 1px solid #ced4da;
+        background-color: #ffffff;
+        color: #333;
+    }
+
+    .filter-section button {
+        background-color: #d9534f; /* Red button */
+        border: none;
+        color: #fff;
+        padding: 10px 20px;
+        border-radius: 4px;
+        transition: background-color 0.3s;
+    }
+
+    .filter-section button:hover {
+        background-color: #c9302c; /* Darker red on hover */
+    }
+
+    /* List Group */
+    .list-group-item {
+        display: flex;
+        justify-content: space-between;
+        font-size: 1rem;
+        padding: 10px 15px;
+    }
+
+    .list-group-item span {
+        font-weight: bold;
+    }
+</style>
+
+<div class="main-content">
+    <div class="row">
+        <!-- Sales data -->
+        <div class="col-md-3">
+            <div class="sales-card">
+                <h5 id="totalSalesToday">₹ <%= todaySales.toFixed(2) %></h5>
+                <p>Today's Sales</p>
+            </div>
         </div>
-       
+        <div class="col-md-3">
+            <div class="monthly-sales-card">
+                <h5 id="totalSalesMonth">₹ <%= monthlySales.toFixed(2) %></h5>
+                <p>This Month's Sales</p>
+            </div>
+        </div>
     </div>
-</section>
-<%- include("../partials/admin/footer") %>
+
+    <!-- Filter -->
+    <div class="filter-section">
+        <select id="salesFilter" class="form-control">
+            <option value="daily">Daily</option>
+            <option value="monthly">Monthly</option>
+            <option value="custom">Custom Date</option> <!-- Added custom date option -->
+        </select>
+        <input type="date" id="startDate" class="custom-date" style="display: none;" />
+        <input type="date" id="endDate" class="custom-date" style="display: none;" />
+        <button id="filterBtn" class="btn btn-primary">Filter</button>
+    </div>
+
+    <!-- Chart -->
+    <div class="chart-container">
+        <canvas id="salesChart"></canvas>
+    </div>
+
+    <!-- <div class="row mt-4">
+        <div class="col-md-12">
+            <a href="/admin/generate-ledger" class="btn btn-success" target="_blank">Generate Ledger Book (PDF)</a>
+        </div>
+    </div> -->
+
+    <div class="container mt-5">
+        <div class="row">
+            <!-- Top Selling Products -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">Top Selling Products</div>
+                    <div class="card-body">
+                        <ul class="list-group">
+                            <% if (topSellingProducts && topSellingProducts.length > 0) { %>
+                                <% topSellingProducts.forEach(product => { %>
+                                    <li class="list-group-item">
+                                        <strong><%= product.productName %></strong> - Sold: <%= product.salesCount %>
+                                    </li>
+                                <% }) %>
+                            <% } else { %>
+                                <li class="list-group-item">No top selling products found.</li>
+                            <% } %>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top Selling Categories -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">Top Selling Categories</div>
+                    <div class="card-body">
+                        <ul class="list-group">
+                            <% if (topSellingCategories && topSellingCategories.length > 0) { %>
+                                <% topSellingCategories.forEach(category => { %>
+                                    <li class="list-group-item">
+                                        <strong><%= category.name %></strong> - Sold: <%= category.totalSales %>
+                                    </li>
+                                <% }) %>
+                            <% } else { %>
+                                <li class="list-group-item">No top selling categories found.</li>
+                            <% } %>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top Selling Brands -->
+            <!-- <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">Top Selling Brands</div>
+                    <div class="card-body">
+                        <ul class="list-group">
+                            </% if (topSellingBrands && topSellingBrands.length > 0) { %>
+                                </% topSellingBrands.forEach(brand => { %>
+                                    <li class="list-group-item">
+                                        <strong></%= brand.brandName %></strong> - Sold: </%= brand.salesCount %>
+                                    </li>
+                                </% }) %>
+                            </% } else { %>
+                                <li class="list-group-item">No top selling brands found.</li>
+                            </% } %>
+                        </ul>
+                    </div>
+                </div>
+            </div> -->
+        </div>
+    </div>
+</div>
+
+<%- include('../../views/partials/admin/footer') %>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.3/Chart.min.js"></script>
+<script>
+    const salesChartElement = document.getElementById('salesChart').getContext('2d');
+    let salesChart;
+
+    const fetchSalesData = async (filter, startDate = '', endDate = '') => {
+        try {
+            const response = await fetch(`/admin/sales-data?filter=${filter}&startDate=${startDate}&endDate=${endDate}`);
+            const data = await response.json();
+            if (data.success) {
+                updateChart(data.data);
+            } else {
+                alert('Error fetching sales data');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error fetching sales data');
+        }
+    };
+
+    const updateChart = (data) => {
+        const labels = data.map(item => {
+            return item._id.day ? `${item._id.day}/${item._id.month}/${item._id.year}` : `${item._id.month}/${item._id.year}`;
+        });
+
+        const salesData = data.map(item => item.totalSales);
+
+        if (salesChart) {
+            salesChart.destroy();
+        }
+
+        salesChart = new Chart(salesChartElement, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Sales',
+                    data: salesData,
+                    backgroundColor: 'rgba(39, 174, 96, 0.7)', // Green color for the chart
+                    borderColor: 'rgba(39, 174, 96, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: true
+                        }
+                    }]
+                }
+            }
+        });
+    };
+
+    // Fetch initial sales data (daily)
+    fetchSalesData('daily');
+
+    // Handle filter button click
+    document.getElementById('filterBtn').addEventListener('click', () => {
+        const filter = document.getElementById('salesFilter').value;
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        fetchSalesData(filter, startDate, endDate);
+    });
+
+    // Show/hide date inputs based on filter selection
+    document.getElementById('salesFilter').addEventListener('change', (event) => {
+        const value = event.target.value;
+        const startDateInput = document.getElementById('startDate');
+        const endDateInput = document.getElementById('endDate');
+
+        if (value === 'custom') {
+            startDateInput.style.display = 'inline-block';
+            endDateInput.style.display = 'inline-block';
+        } else {
+            startDateInput.style.display = 'none';
+            endDateInput.style.display = 'none';
+        }
+    });
+</script>

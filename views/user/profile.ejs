@@ -486,6 +486,7 @@
                       </thead>
                       <tbody>
                         <% if (walletData && walletData.transactions && walletData.transactions.length > 0) { %>
+                          <% walletData.transactions.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); %>
                           <% walletData.transactions.forEach(transaction => { %>
                             <tr>
                               <td><%= new Date(transaction.createdAt).toLocaleDateString() %></td>
@@ -567,7 +568,26 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if there is a success message in the URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const successMessage = urlParams.get('success');
+
+    if (successMessage) {
+        Swal.fire({
+            icon: 'success',
+            title: 'Success!',
+            text: successMessage,
+            showConfirmButton: true
+        });
+    }
+});
 
 </script>
+
+
+
+<!-- Include SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <%- include("../partials/user/footer") %>

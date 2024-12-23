@@ -29,7 +29,7 @@
                     <tbody>
                     <% orders.forEach(order => { %>
                         <tr data-order-id="<%= order._id %>">
-                            <td><small class="text-muted">#<%= order._id %></small></td>
+                            <td><small class="text-muted">#<%= order.orderId %></small></td>
                             <td>
                                 <strong><%= order.userId.name %></strong><br>
                                 <small><%= order.userId.email %></small>
@@ -68,11 +68,11 @@
                             <td>
                                 <div class="btn-group" role="group">
                                     <!-- Quick View Modal Button -->
-                                    <button class="btn btn-sm btn-info view-details-btn" 
-                                            data-order-id="<%= order._id %>"
+                                    <!-- <button class="btn btn-sm btn-info view-details-btn" 
+                                            data-order-id="</%= order._id %>"
                                             title="Quick View">
                                         <i class="fas fa-eye"></i>
-                                    </button>
+                                    </button> -->
                                     <!-- Full Details Page Link -->
                                     <a href="/admin/orders/<%= order._id %>/detail" 
                                        class="btn btn-sm btn-primary"

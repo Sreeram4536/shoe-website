@@ -45,6 +45,54 @@
 </div>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+
+document.getElementById('addressForm').addEventListener('submit', function(event) {
+        event.preventDefault(); // Prevent default form submission
+
+        const formData = new FormData(this);
+        const data = {};
+        formData.forEach((value, key) => {
+            data[key] = value;
+        });
+
+        // Send data to backend via fetch
+        fetch(`/user/addAddress`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams(data),
+        })
+        .then(response => response.json()) // Parse JSON response
+        .then(responseData => {
+            if (responseData.success) {
+                // Display success message and redirect
+                Swal.fire({
+                    title: 'Success',
+                    text: responseData.message,
+                    icon: 'success',
+                    confirmButtonText: 'OK'
+                }).then(() => {
+                    // Redirect to user profile page
+                    window.location.href = '/user/userProfile';
+                });
+            } else {
+                // Display error message
+                Swal.fire({
+                    title: 'Error',
+                    text: responseData.message,
+                    icon: 'error'
+                });
+            }
+        })
+        .catch(error => {
+            Swal.fire({
+                title: 'Error',
+                text: 'Something went wrong. Please try again.',
+                icon: 'error'
+            });
+        });
+    });
   
    document.getElementById('addressForm').addEventListener('submit', function(event) {
        if (!validateForm()) {

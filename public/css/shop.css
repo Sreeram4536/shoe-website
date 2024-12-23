@@ -1506,13 +1506,14 @@ input.button.add {
 /* Search Box */
 .search-form .input-group {
     display: flex;
-    gap: 5px;
+    gap: 10px;
 }
 
 .search-form input {
     border-radius: 4px;
     border: 1px solid #ddd;
     padding: 8px 12px;
+    flex:1;
 }
 
 .btn-search, .btn-clear {

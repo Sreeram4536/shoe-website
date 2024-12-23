@@ -55,9 +55,14 @@ const productSchema = new mongoose.Schema({
         default:"Available"
     },
     // maxQtyPerUser: { type: Number, required: true, default: 5 },
-
-    
-},{timestamps:true});
+    salesCount: {
+        type: Number,
+        default: 0
+    },
+    lastSoldDate: {
+        type: Date
+    }
+}, { timestamps: true });
 
 const Product = mongoose.model("Product",productSchema)
 module.exports=Product

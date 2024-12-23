@@ -7,6 +7,7 @@ const env = require("dotenv").config();
 const seesion=require("express-session");
 const { session } = require("passport");
 const Wallet = require("../../models/walletSchema");
+const Product = require("../../models/productSchema");
 
 function generateOtp(){
     const digits="1234567890";
@@ -496,14 +497,15 @@ const postEditAddress = async (req, res) => {
                 }
             }}
         );
-
+        
         // Return the updated address
         const updatedAddress = await Address.findOne({ "address._id": addressId });
-         res.json({
+         return res.json({
             success: true,
             message: 'Address updated successfully',
             updatedAddress: updatedAddress.address.find(addr => addr._id.toString() === addressId)
         });
+        
     } catch (error) {
         console.error("Error in edit address", error);
         res.status(500).json({
@@ -511,6 +513,8 @@ const postEditAddress = async (req, res) => {
             message: 'Failed to update address'
         });
     }
+
+    
 }
 
 const deleteAddress = async(req,res)=>{
@@ -671,6 +675,55 @@ const updateNewEmail = async(req, res) => {
     }
 }
 
+const loadShop = async (req, res) => {
+    try {
+        const user = req.session.user;
+        const category = req.query.category; // Get the category from query parameters
+        const brand = req.query.brand; // Get the brand from query parameters
+        const sortOrder = req.query.sort || 'asc'; // Get the sort order
+        const page = parseInt(req.query.page) || 1; // Get the current page
+        const limit = 6; // Set the number of products per page
+        const skip = (page - 1) * limit; // Calculate how many products to skip
+
+        const query = {
+            isBlocked: false,
+            quantity: { $gt: 0 }
+        };
+
+        if (category) {
+            query.category = category; // Filter by category if provided
+        }
+
+        if (brand) {
+            query.brand = brand; // Filter by brand if provided
+        }
+
+        // Fetch filtered and sorted products
+        const products = await Product.find(query)
+            .sort({ salePrice: sortOrder === 'asc' ? 1 : -1 }) // Sort by price
+            .skip(skip)
+            .limit(limit)
+            .lean();
+
+        const totalProducts = await Product.countDocuments(query); // Get total count of filtered products
+        const totalPages = Math.ceil(totalProducts / limit); // Calculate total pages
+
+        res.render("user/shop", {
+            user: user,
+            products: products,
+            currentPage: page,
+            totalPages: totalPages,
+            selectedCategory: category || null, // Pass the selected category
+            selectedBrand: brand || null, // Pass the selected brand
+            sortOrder: sortOrder, // Pass the sort order
+            session: req.session
+        });
+    } catch (error) {
+        console.error("Error loading shop:", error);
+        res.redirect("/pageNotFound");
+    }
+};
+
 module.exports={
     getForgotPassPage,
     forgotEmailValid,
@@ -696,6 +749,7 @@ module.exports={
     resendChangePasswordOtp,
     resendEmailOtp,
     newEmailPage,
-    updateNewEmail
+    updateNewEmail,
+    loadShop
 
 }

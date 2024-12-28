@@ -1546,7 +1546,7 @@ input.button.add {
     color: #555;
     transition: all 0.3s ease;
     text-decoration: none;
-    background: #f8f9fa;
+    /* background: #f8f9fa; */
 }
 
 .category-item:hover {
@@ -1608,4 +1608,18 @@ input.button.add {
         flex: 1;
     }
 }
+
+/* .category-item.active {
+    background-color: #28a745;
+    color: #fff;
+    font-weight: bold;
+    border-radius: 5px;
+} */
+
+/* .sort-btn.active {
+    background-color: hsl(337, 89%, 43%);
+    color: #fff;
+    font-weight: bold;
+    border-radius: 5px;
+} */
 

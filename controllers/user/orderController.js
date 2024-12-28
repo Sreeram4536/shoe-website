@@ -78,6 +78,36 @@ const cancelOrder = async (req, res) => {
             });
         }
 
+        // Add final amount to wallet if payment status is not pending
+        if (order.paymentStatus !== 'Pending') {
+            const walletTransaction = {
+                transactionId: `CNL${Date.now()}${orderId.slice(-4)}`, // Unique transaction ID
+                amount: order.finalAmount,
+                type: 'Credit',
+                description: `Refund for cancelled order`,
+                orderId: orderId,
+                status: 'Success',
+                createdAt: new Date()
+            };
+
+            let wallet = await Wallet.findOne({ userId });
+            if (wallet) {
+                // Update existing wallet
+                wallet.transactions.push(walletTransaction);
+                wallet.balance += order.finalAmount;
+                await wallet.save();
+            } else {
+                // Create new wallet document
+                wallet = new Wallet({
+                    userId,
+                    balance: order.finalAmount,
+                    transactions: [walletTransaction],
+                    isActive: true
+                });
+                await wallet.save();
+            }
+        }
+
         return res.status(200).json({
             success: true,
             message: 'Order cancelled successfully'
@@ -243,6 +273,203 @@ const returnOrder = async (req, res) => {
     }
 };
 
+// const downloadInvoice = async (req, res) => {
+//     try {
+//         const orderId = req.params.orderId;
+//         const order = await Order.findById(orderId)
+//             .populate('orderedItems.product')
+//             .populate('userId');
+
+//         if (!order) {
+//             return res.status(404).send('Order not found');
+//         }
+
+//         // Get delivery address
+//         const addressDoc = await Address.findOne(
+//             { userId: order.userId._id, "address._id": order.address },
+//             { "address.$": 1 }
+//         );
+
+//         // Create PDF document with larger margins
+//         const doc = new PDFDocument({ 
+//             margin: 50,
+//             size: 'A4'
+//         });
+
+//         // Set response headers
+//         res.setHeader('Content-Type', 'application/pdf');
+//         res.setHeader('Content-Disposition', `attachment; filename=invoice-${order.orderId}.pdf`);
+//         doc.pipe(res);
+
+//         // Helper function for lines
+//         function drawLine(doc, startX, startY, endX, endY) {
+//             doc.moveTo(startX, startY)
+//                .lineTo(endX, endY)
+//                .stroke();
+//         }
+
+//         // Store Header
+//         doc.fontSize(25)
+//            .font('Helvetica-Bold')
+//            .fillColor('#487379')
+//            .text('DOWNY SHOES', { align: 'center' })
+//            .fontSize(12)
+//            .fillColor('#666666')
+//            .text('Premium Footwear Store', { align: 'center' })
+//            .moveDown();
+
+//         drawLine(doc, 50, doc.y, 550, doc.y);
+//         doc.moveDown();
+
+//         // Invoice Title
+//         doc.fontSize(20)
+//            .fillColor('#333333')
+//            .text('INVOICE', { align: 'center' })
+//            .moveDown();
+
+//         // Order & Shipping Details in columns
+//         const rightColumn = 300;
+//         doc.fontSize(12)
+//            .font('Helvetica-Bold')
+//            .text('Order Details:', 50)
+//            .font('Helvetica')
+//            .moveDown(0.5)
+//            .text(`Order ID: #${order.orderId}`)
+//            .text(`Date: ${new Date(order.createdOn).toLocaleDateString()}`)
+//            .text(`Payment Method: ${order.paymentMethod}`)
+//            .text(`Payment Status: ${order.paymentStatus}`);
+
+//         doc.fontSize(12)
+//            .font('Helvetica-Bold')
+//            .text('Ship To:', rightColumn, doc.y - 85)
+//            .font('Helvetica')
+//            .text(addressDoc.address[0].name, rightColumn)
+//            .text(addressDoc.address[0].city, rightColumn)
+//            .text(addressDoc.address[0].landMark, rightColumn)
+//            .text(`${addressDoc.address[0].state}, ${addressDoc.address[0].pincode}`, rightColumn)
+//            .text(`Phone: ${addressDoc.address[0].phone}`, rightColumn)
+//            .moveDown();
+
+//         // Products Table
+//         drawLine(doc, 50, doc.y, 550, doc.y);
+//         doc.moveDown();
+
+//         // Table headers with background
+//         const tableTop = doc.y;
+//         doc.fillColor('#487379')
+//            .rect(50, tableTop, 500, 25)
+//            .fill();
+
+//         // Table header text
+//         doc.fillColor('#FFFFFF')
+//            .fontSize(12)
+//            .font('Helvetica-Bold')
+//            .text('Product', 60, tableTop + 7)
+//            .text('Quantity', 270, tableTop + 7)
+//            .text('Price', 370, tableTop + 7)
+//            .text('Total', 470, tableTop + 7);
+
+//         // Reset text color for items
+//         doc.fillColor('#000000');
+
+//         // Table content with alternate row colors
+//         let yPos = tableTop + 30;
+//         order.orderedItems.forEach((item, index) => {
+//             // Alternate row background
+//             if (index % 2 === 0) {
+//                 doc.fillColor('#f6f6f6')
+//                    .rect(50, yPos - 5, 500, 25)
+//                    .fill();
+//             }
+
+//             doc.fillColor('#000000')
+//                .fontSize(10)
+//                .font('Helvetica')
+//                .text(item.product.productName.substring(0, 30), 60, yPos)
+//                .text(item.quantity.toString(), 270, yPos)
+//                .text(`${item.price.toFixed(2)}`, 370, yPos)
+//                .text(`${(item.quantity * item.price).toFixed(2)}`, 470, yPos);
+
+//             yPos += 25;
+//         });
+
+//         // Add line after items
+//         drawLine(doc, 50, yPos + 10, 550, yPos + 10);
+
+//         // Totals Section with GST
+//         const gstAmount = order.totalPrice * 0.05; // Calculate GST (5%)
+//         const finalAmountWithGST = order.finalAmount + gstAmount;
+
+
+//         // Totals section
+//         yPos += 20;
+//         doc.font('Helvetica')
+//            .fontSize(10)
+//            .text('Subtotal:', 370, yPos)
+//            .text(`Rs.${order.totalPrice.toFixed(2)}`, 470, yPos);
+
+//         yPos += 20;
+//         doc.text('Discount:', 370, yPos)
+//            .text(`${order.discount.toFixed(2)}`, 470, yPos);
+
+//            yPos += 20;
+//                    doc.text('GST (5%):', 370, yPos)
+//                       .text(`Rs.${gstAmount.toFixed(2)}`, 470, yPos);
+
+//         yPos += 25;
+//         doc.font('Helvetica-Bold')
+//            .fontSize(12)
+//            .text('Final Amount:', 370, yPos)
+//            .text(`Rs.${finalAmountWithGST.toFixed(2)}`, 470, yPos);
+
+//         // Footer (positioned at bottom)
+//         // const footerTop = doc.page.height - 100;
+//         // doc.fontSize(10)
+//         //    .font('Helvetica')
+//         //    .fillColor('#666666');
+
+//         // // Footer border
+//         // drawLine(doc, 50, footerTop - 10, 550, footerTop - 10);
+
+//         // // Footer content
+//         // doc.text('Thank you for shopping with Downy Shoes!', {
+//         //     align: 'center',
+//         //     y: footerTop
+//         // })
+//         // .moveDown(0.5)
+//         // .text('For any queries, please contact: support@downyshoes.com', {
+//         //     align: 'center'
+//         // })
+//         // .moveDown(0.5)
+//         // .text('Visit us at: www.downyshoes.com', {
+//         //     align: 'center'
+//         // });
+
+//             // Footer (Single Line at Bottom Center)
+//         const footerTop = doc.page.height - 50;
+//         drawLine(doc, 50, footerTop - 10, 550, footerTop - 10);
+
+//         doc.fontSize(10)
+//            .font('Helvetica')
+//            .fillColor('#666666')
+//            .text(
+//                'Thank you for shopping with Downy Shoes! | support@downyshoes.com | www.downyshoes.com',
+//                50,
+//                footerTop,
+//                { align: 'center', width: 500 }
+//            );
+
+        
+
+//         // Finalize PDF
+//         doc.end();
+
+//     } catch (error) {
+//         console.error('Error generating invoice:', error);
+//         res.status(500).send('Error generating invoice');
+//     }
+// };
+
 const downloadInvoice = async (req, res) => {
     try {
         const orderId = req.params.orderId;
@@ -260,57 +487,74 @@ const downloadInvoice = async (req, res) => {
             { "address.$": 1 }
         );
 
-        // Create PDF document with larger margins
-        const doc = new PDFDocument({ 
+        // Create PDF document
+        const doc = new PDFDocument({
             margin: 50,
             size: 'A4'
         });
 
-        // Set response headers
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename=invoice-${order.orderId}.pdf`);
         doc.pipe(res);
 
-        // Helper function for lines
-        function drawLine(doc, startX, startY, endX, endY) {
-            doc.moveTo(startX, startY)
-               .lineTo(endX, endY)
-               .stroke();
+        // ✅ Footer Function (Last Page Only)
+        function renderFooter(doc) {
+            const footerY = doc.page.height - 50; // 50px from bottom
+            doc.fontSize(10)
+               .font('Helvetica')
+               .fillColor('#666666')
+               .text(
+                   'Thank you for shopping with Downy Shoes! | support@downyshoes.com | www.downyshoes.com',
+                   50,
+                   footerY,
+                   { align: 'center', width: 500 }
+               );
         }
 
-        // Store Header
+        // ✅ HEADER SECTION
         doc.fontSize(25)
            .font('Helvetica-Bold')
            .fillColor('#487379')
-           .text('DOWNY SHOES', { align: 'center' })
-           .fontSize(12)
+           .text('DOWNY SHOES', { align: 'center' });
+
+        doc.fontSize(12)
            .fillColor('#666666')
-           .text('Premium Footwear Store', { align: 'center' })
+           .text('Premium Footwear Store', { align: 'center' });
+
+        // ✅ FAKE ADDRESS BELOW HEADER
+        doc.fontSize(10)
+           .fillColor('#333333')
+           .text(' Shoe Lane, Fashion City, Banglore', { align: 'center' })
+           .text('Phone: +91 9605027449 | Email: info@downyshoes.com', { align: 'center' })
            .moveDown();
 
-        drawLine(doc, 50, doc.y, 550, doc.y);
+        // ✅ LINE SEPARATOR
+        doc.moveTo(50, doc.y)
+           .lineTo(550, doc.y)
+           .strokeColor('#CCCCCC')
+           .lineWidth(1)
+           .stroke();
+
         doc.moveDown();
 
-        // Invoice Title
+        // ✅ INVOICE TITLE
         doc.fontSize(20)
            .fillColor('#333333')
            .text('INVOICE', { align: 'center' })
            .moveDown();
 
-        // Order & Shipping Details in columns
+        // ✅ ORDER & SHIPPING DETAILS
         const rightColumn = 300;
         doc.fontSize(12)
            .font('Helvetica-Bold')
            .text('Order Details:', 50)
            .font('Helvetica')
-           .moveDown(0.5)
            .text(`Order ID: #${order.orderId}`)
            .text(`Date: ${new Date(order.createdOn).toLocaleDateString()}`)
            .text(`Payment Method: ${order.paymentMethod}`)
            .text(`Payment Status: ${order.paymentStatus}`);
 
-        doc.fontSize(12)
-           .font('Helvetica-Bold')
+        doc.font('Helvetica-Bold')
            .text('Ship To:', rightColumn, doc.y - 85)
            .font('Helvetica')
            .text(addressDoc.address[0].name, rightColumn)
@@ -320,17 +564,12 @@ const downloadInvoice = async (req, res) => {
            .text(`Phone: ${addressDoc.address[0].phone}`, rightColumn)
            .moveDown();
 
-        // Products Table
-        drawLine(doc, 50, doc.y, 550, doc.y);
-        doc.moveDown();
-
-        // Table headers with background
+        // ✅ PRODUCTS TABLE
         const tableTop = doc.y;
         doc.fillColor('#487379')
            .rect(50, tableTop, 500, 25)
            .fill();
 
-        // Table header text
         doc.fillColor('#FFFFFF')
            .fontSize(12)
            .font('Helvetica-Bold')
@@ -339,13 +578,10 @@ const downloadInvoice = async (req, res) => {
            .text('Price', 370, tableTop + 7)
            .text('Total', 470, tableTop + 7);
 
-        // Reset text color for items
         doc.fillColor('#000000');
 
-        // Table content with alternate row colors
         let yPos = tableTop + 30;
         order.orderedItems.forEach((item, index) => {
-            // Alternate row background
             if (index % 2 === 0) {
                 doc.fillColor('#f6f6f6')
                    .rect(50, yPos - 5, 500, 25)
@@ -361,13 +597,18 @@ const downloadInvoice = async (req, res) => {
                .text(`${(item.quantity * item.price).toFixed(2)}`, 470, yPos);
 
             yPos += 25;
+            if (yPos > doc.page.height - 100) {
+                doc.addPage();
+                yPos = 50; // Reset yPos after adding a new page
+            }
         });
 
-        // Add line after items
-        drawLine(doc, 50, yPos + 10, 550, yPos + 10);
+        doc.moveDown(2);
 
-        // Totals section
-        yPos += 20;
+        // ✅ TOTALS SECTION
+        const gstAmount = order.totalPrice * 0.05;
+        const finalAmountWithGST = order.finalAmount + gstAmount;
+
         doc.font('Helvetica')
            .fontSize(10)
            .text('Subtotal:', 370, yPos)
@@ -377,46 +618,196 @@ const downloadInvoice = async (req, res) => {
         doc.text('Discount:', 370, yPos)
            .text(`${order.discount.toFixed(2)}`, 470, yPos);
 
+        yPos += 20;
+        doc.text('GST (5%):', 370, yPos)
+           .text(`Rs.${gstAmount.toFixed(2)}`, 470, yPos);
+
         yPos += 25;
         doc.font('Helvetica-Bold')
            .fontSize(12)
            .text('Final Amount:', 370, yPos)
-           .text(`Rs.${order.finalAmount.toFixed(2)}`, 470, yPos);
+           .text(`Rs.${finalAmountWithGST.toFixed(2)}`, 470, yPos);
 
-        // Footer (positioned at bottom)
-        const footerTop = doc.page.height - 50;
-        doc.fontSize(10)
-           .font('Helvetica')
-           .fillColor('#666666');
-
-        // Footer border
-        drawLine(doc, 50, footerTop - 10, 550, footerTop - 10);
-
-        // Footer content centered
-        doc.text('Thank you for shopping with Downy Shoes!', {
-            align: 'center',
-            width: 500,
-            continued: true
-        })
-        .moveDown(0.5)
-        .text('For any queries, please contact: support@downyshoes.com', {
-            align: 'center',
-            width: 500
-        })
-        .moveDown(0.5)
-        .text('Visit us at: www.downyshoes.com', {
-            align: 'center',
-            width: 500
-        });
+        // ✅ Render Footer Only at the End
+        // renderFooter(doc);
 
         // Finalize PDF
         doc.end();
+    
+
 
     } catch (error) {
         console.error('Error generating invoice:', error);
         res.status(500).send('Error generating invoice');
     }
 };
+
+
+
+// const downloadInvoice = async (req, res) => {
+//     try {
+//         const orderId = req.params.orderId;
+//         const order = await Order.findById(orderId)
+//             .populate('orderedItems.product')
+//             .populate('userId');
+
+//         if (!order) {
+//             return res.status(404).send('Order not found');
+//         }
+
+//         // Get delivery address
+//         const addressDoc = await Address.findOne(
+//             { userId: order.userId._id, "address._id": order.address },
+//             { "address.$": 1 }
+//         );
+
+//         // Create PDF document with larger margins
+//         const doc = new PDFDocument({ 
+//             margin: 50,
+//             size: 'A4'
+//         });
+
+//         // Set response headers
+//         res.setHeader('Content-Type', 'application/pdf');
+//         res.setHeader('Content-Disposition', `attachment; filename=invoice-${order.orderId}.pdf`);
+//         doc.pipe(res);
+
+//         // Helper function for lines
+//         function drawLine(doc, startX, startY, endX, endY) {
+//             doc.moveTo(startX, startY)
+//                .lineTo(endX, endY)
+//                .stroke();
+//         }
+
+//         // Store Header
+//         doc.fontSize(25)
+//            .font('Helvetica-Bold')
+//            .fillColor('#487379')
+//            .text('DOWNY SHOES', { align: 'center' })
+//            .fontSize(12)
+//            .fillColor('#666666')
+//            .text('Premium Footwear Store', { align: 'center' })
+//            .moveDown();
+
+//         drawLine(doc, 50, doc.y, 550, doc.y);
+//         doc.moveDown();
+
+//         // Invoice Title
+//         doc.fontSize(20)
+//            .fillColor('#333333')
+//            .text('INVOICE', { align: 'center' })
+//            .moveDown();
+
+//         // Order & Shipping Details
+//         const rightColumn = 300;
+//         doc.fontSize(12)
+//            .font('Helvetica-Bold')
+//            .text('Order Details:', 50)
+//            .font('Helvetica')
+//            .moveDown(0.5)
+//            .text(`Order ID: #${order.orderId}`)
+//            .text(`Date: ${new Date(order.createdOn).toLocaleDateString()}`)
+//            .text(`Payment Method: ${order.paymentMethod}`)
+//            .text(`Payment Status: ${order.paymentStatus}`);
+
+//         doc.fontSize(12)
+//            .font('Helvetica-Bold')
+//            .text('Ship To:', rightColumn, doc.y - 85)
+//            .font('Helvetica')
+//            .text(addressDoc.address[0].name, rightColumn)
+//            .text(addressDoc.address[0].city, rightColumn)
+//            .text(addressDoc.address[0].landMark, rightColumn)
+//            .text(`${addressDoc.address[0].state}, ${addressDoc.address[0].pincode}`, rightColumn)
+//            .text(`Phone: ${addressDoc.address[0].phone}`, rightColumn)
+//            .moveDown();
+
+//         // Products Table
+//         drawLine(doc, 50, doc.y, 550, doc.y);
+//         doc.moveDown();
+
+//         const tableTop = doc.y;
+//         doc.fillColor('#487379')
+//            .rect(50, tableTop, 500, 25)
+//            .fill();
+
+//         doc.fillColor('#FFFFFF')
+//            .fontSize(12)
+//            .font('Helvetica-Bold')
+//            .text('Product', 60, tableTop + 7)
+//            .text('Quantity', 270, tableTop + 7)
+//            .text('Price', 370, tableTop + 7)
+//            .text('Total', 470, tableTop + 7);
+
+//         doc.fillColor('#000000');
+
+//         let yPos = tableTop + 30;
+//         order.orderedItems.forEach((item, index) => {
+//             if (index % 2 === 0) {
+//                 doc.fillColor('#f6f6f6')
+//                    .rect(50, yPos - 5, 500, 25)
+//                    .fill();
+//             }
+
+//             doc.fillColor('#000000')
+//                .fontSize(10)
+//                .font('Helvetica')
+//                .text(item.product.productName.substring(0, 30), 60, yPos)
+//                .text(item.quantity.toString(), 270, yPos)
+//                .text(`${item.price.toFixed(2)}`, 370, yPos)
+//                .text(`${(item.quantity * item.price).toFixed(2)}`, 470, yPos);
+
+//             yPos += 25;
+//         });
+
+//         drawLine(doc, 50, yPos + 10, 550, yPos + 10);
+
+//         // Totals Section with GST
+//         const gstAmount = order.totalPrice * 0.05; // Calculate GST (5%)
+//         const finalAmountWithGST = order.finalAmount + gstAmount;
+
+//         yPos += 20;
+//         doc.font('Helvetica')
+//            .fontSize(10)
+//            .text('Subtotal:', 370, yPos)
+//            .text(`Rs.${order.totalPrice.toFixed(2)}`, 470, yPos);
+
+//         yPos += 20;
+//         doc.text('Discount:', 370, yPos)
+//            .text(`Rs.${order.discount.toFixed(2)}`, 470, yPos);
+
+//         yPos += 20;
+//         doc.text('GST (5%):', 370, yPos)
+//            .text(`Rs.${gstAmount.toFixed(2)}`, 470, yPos);
+
+//         yPos += 25;
+//         doc.font('Helvetica-Bold')
+//            .fontSize(12)
+//            .text('Final Amount (Incl. GST):', 370, yPos)
+//            .text(`Rs.${finalAmountWithGST.toFixed(2)}`, 470, yPos);
+
+//         // Footer (Single Line at Bottom Center)
+//         const footerTop = doc.page.height - 50;
+//         drawLine(doc, 50, footerTop - 10, 550, footerTop - 10);
+
+//         doc.fontSize(10)
+//            .font('Helvetica')
+//            .fillColor('#666666')
+//            .text(
+//                'Thank you for shopping with Downy Shoes! | support@downyshoes.com | www.downyshoes.com',
+//                50,
+//                footerTop,
+//                { align: 'center', width: 500 }
+//            );
+
+//         // Finalize PDF
+//         doc.end();
+
+//     } catch (error) {
+//         console.error('Error generating invoice:', error);
+//         res.status(500).send('Error generating invoice');
+//     }
+// };
+
 
 // const placeOrder = async (req, res) => {
 //     try {

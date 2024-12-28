@@ -203,7 +203,7 @@
 
                             
                             <!-- Order Summary -->
-                            <div class="col-md-6">
+                            <!-- <div class="col-md-6">
                                 <h6 class="mb-3">Order Summary</h6>
                                 <div class="bg-light p-3 rounded">
                                     <p class="d-flex justify-content-between mb-2">
@@ -220,7 +220,35 @@
                                         <span>₹<%= order.finalAmount.toFixed(2) %></span>
                                     </p>
                                 </div>
-                            </div>
+                            </div> -->
+
+                                                    <!-- Order Summary -->
+                        <div class="col-md-6">
+                            <h6 class="mb-3">Order Summary</h6>
+                           <div class="bg-light p-3 rounded">
+                               <p class="d-flex justify-content-between mb-2">
+                                   <span>Subtotal:</span>
+                                   <span>₹<%= order.totalPrice.toFixed(2) %></span>
+                               </p>
+                               <p class="d-flex justify-content-between mb-2">
+                                   <span>Delivery Charge:</span>
+                                   <span>₹0 %></span> <!-- Added delivery charge -->
+                               </p>
+                               <p class="d-flex justify-content-between mb-2">
+                                   <span>GST (5%):</span>
+                                   <span>₹<%= (order.totalPrice * 0.05).toFixed(2) %></span> <!-- Added GST calculation -->
+                               </p>
+                               <p class="d-flex justify-content-between mb-2">
+                                   <span>Discount:</span>
+                                   <span>₹<%= order.discount.toFixed(2) %></span>
+                               </p>
+                               <hr>
+                               <p class="d-flex justify-content-between mb-0 fw-bold">
+                                   <span>Total:</span>
+                                   <span>₹<%= (order.finalAmount + (order.totalPrice * 0.05)).toFixed(2) %></span> <!-- Updated total calculation -->
+                               </p>
+                           </div>
+                       </div>
                         </div>
 
                         <!-- Action Buttons -->
@@ -243,7 +271,7 @@
                                     Return Order
                                 </button>
                             <% } %>
-                            <% if (order.status === 'Pending' && order.paymentMethod === 'RazorPay') { %>
+                            <% if (order.paymentStatus === 'Pending' && order.paymentMethod === 'RazorPay') { %>
                                 <button onclick="retryPayment('<%= order._id %>', '<%= order.finalAmount %>')" class="btn btn-warning me-2">
                                     Retry Payment
                                 </button>

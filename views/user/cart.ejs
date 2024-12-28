@@ -160,12 +160,27 @@
 												<i class="fas fa-trash-alt"></i> Remove
 											</button>
 										</div>
-										<div class="ms-3">
+										<!-- <div class="ms-3">
 											<input type="number" class="form-control quantity-input" 
+												data-product-id="</%= item.productId._id %>" 
+												value="</%= item.quantity %>" 
+												min="1" max="</%= item.productId.quantity %>" required>
+										</div> -->
+										<div class="ms-3 d-flex align-items-center">
+											<button class="btn btn-outline-secondary btn-sm btn-decrease" 
+												data-product-id="<%= item.productId._id %>">-</button>
+											
+											<input type="number" class="form-control text-center quantity-input" 
 												data-product-id="<%= item.productId._id %>" 
 												value="<%= item.quantity %>" 
-												min="1" max="<%= item.productId.quantity %>" required>
+												min="1" max="<%= item.productId.quantity %>" 
+												required readonly>
+											
+											<button class="btn btn-outline-secondary btn-sm btn-increase" 
+												data-product-id="<%= item.productId._id %>">+</button>
 										</div>
+
+										
 										<div class="ms-3 text-end">
 											<p class="mb-0">Total:</p>
 											<p class="mb-0 text-success fw-bold">INR <%= item.quantity * item.price %></p>
@@ -255,29 +270,29 @@
     return false;
 }
 		// Function to handle quantity updates
-		function updateQuantity(productId, newQuantity) {
-			fetch('/user/cart/update', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify({
-					product_id: productId,
-					quantity: newQuantity
-				})
-			})
-			.then(response => response.json())
-			.then(data => {
-				if (data.success) {
-					showAlert('success', 'Success', data.message);
-				} else {
-					showAlert('error', 'Error', data.message);
-				}
-			})
-			.catch(error => {
-				showAlert('error', 'Error', 'Something went wrong!');
-			});
-		}
+		// function updateQuantity(productId, newQuantity) {
+		// 	fetch('/user/cart/update', {
+		// 		method: 'POST',
+		// 		headers: {
+		// 			'Content-Type': 'application/json',
+		// 		},
+		// 		body: JSON.stringify({
+		// 			product_id: productId,
+		// 			quantity: newQuantity
+		// 		})
+		// 	})
+		// 	.then(response => response.json())
+		// 	.then(data => {
+		// 		if (data.success) {
+		// 			showAlert('success', 'Success', data.message);
+		// 		} else {
+		// 			showAlert('error', 'Error', data.message);
+		// 		}
+		// 	})
+		// 	.catch(error => {
+		// 		showAlert('error', 'Error', 'Something went wrong!');
+		// 	});
+		// }
 		
 		// Function to remove item from cart
 		function removeFromCart(productId) {
@@ -313,17 +328,233 @@
 				showAlert('error', 'Error', 'Something went wrong!');
 			});
 		}
-		
+
+		// Event delegation for + and - buttons
+		document.addEventListener('click', async (event) => {
+			if (event.target.classList.contains('btn-increase') || event.target.classList.contains('btn-decrease')) {
+				const button = event.target;
+				const productId = button.getAttribute('data-product-id');
+				const inputField = button.parentElement.querySelector('.quantity-input');
+				let currentQuantity = parseInt(inputField.value);
+				const maxQuantity = parseInt(inputField.getAttribute('max'));
+
+				// Adjust quantity based on button type
+				if (button.classList.contains('btn-increase')) {
+					if (currentQuantity < maxQuantity) {
+						currentQuantity++;
+					} else {
+						Swal.fire({
+							icon: 'warning',
+							title: 'Stock Limit Reached',
+							text: `Only ${maxQuantity} items available in stock.`,
+						});
+						return;
+					}
+				} else if (button.classList.contains('btn-decrease')) {
+					if (currentQuantity > 1) {
+						currentQuantity--;
+					} else {
+						Swal.fire({
+							icon: 'warning',
+							title: 'Minimum Quantity Reached',
+							text: 'Quantity cannot be less than 1.',
+						});
+						return;
+					}
+				}
+
+				// Update the quantity visually
+				inputField.value = currentQuantity;
+
+				try {
+					// Send updated quantity to backend
+					const response = await fetch('/user/cart/update', {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+						},
+						body: JSON.stringify({
+							product_id: productId,
+							quantity: currentQuantity,
+						}),
+					});
+
+					const result = await response.json();
+
+					if (result.success) {
+						Swal.fire({
+							icon: 'success',
+							title: 'Quantity Updated',
+							text: result.message,
+							timer: 1500,
+							showConfirmButton: false,
+						}).then(() => {
+                    location.reload(); // Reload the cart page after the success message
+                });
+					} else {
+						Swal.fire({
+							icon: 'error',
+							title: 'Update Failed',
+							text: result.message,
+						});
+						// Revert quantity if update failed
+						inputField.value = currentQuantity - 1; // Revert to previous value
+					}
+				} catch (error) {
+					console.error('Error:', error);
+					Swal.fire({
+						icon: 'error',
+						title: 'Server Error',
+						text: 'Something went wrong. Please try again later.',
+					});
+				}
+			}
+		});
+
 		// Add event listeners when document is ready
 		document.addEventListener('DOMContentLoaded', function() {
-			// Quantity input event listeners
-			document.querySelectorAll('.quantity-input').forEach(input => {
-				input.addEventListener('change', function() {
-					const productId = this.getAttribute('data-product-id');
-					const newQuantity = parseInt(this.value);
-					updateQuantity(productId, newQuantity);
-				});
-			});
+
+// 			document.addEventListener('click', async (event) => {
+//     if (event.target.classList.contains('btn-increase') || event.target.classList.contains('btn-decrease')) {
+//         const button = event.target;
+//         const productId = button.getAttribute('data-product-id');
+//         const inputField = button.parentElement.querySelector('.quantity-input');
+//         let currentQuantity = parseInt(inputField.value);
+//         const maxQuantity = parseInt(inputField.getAttribute('max'));
+        
+//         console.log('Current Quantity:', currentQuantity); // Debugging line
+//         console.log('Max Quantity:', maxQuantity); // Debugging line
+
+//         // Adjust quantity based on button type
+//         if (button.classList.contains('btn-increase')) {
+//             if (currentQuantity < maxQuantity) {
+//                 currentQuantity++;
+//             } else {
+//                 Swal.fire({
+//                     icon: 'warning',
+//                     title: 'Stock Limit Reached',
+//                     text: `Only ${maxQuantity} items available in stock.`,
+//                 });
+//                 return;
+//             }
+//         } else if (button.classList.contains('btn-decrease')) {
+//             if (currentQuantity > 1) {
+//                 currentQuantity--;
+//             } else {
+//                 Swal.fire({
+//                     icon: 'warning',
+//                     title: 'Minimum Quantity Reached',
+//                     text: 'Quantity cannot be less than 1.',
+//                 });
+//                 return;
+//             }
+//         }
+
+//         // Update the quantity visually
+//         inputField.value = currentQuantity;
+
+//         try {
+//             // Send updated quantity to backend
+//             const response = await fetch('/user/cart/update', {
+//                 method: 'POST',
+//                 headers: {
+//                     'Content-Type': 'application/json',
+//                 },
+//                 body: JSON.stringify({
+//                     product_id: productId,
+//                     quantity: currentQuantity,
+//                 }),
+//             });
+
+//             const result = await response.json();
+
+//             if (result.success) {
+//                 Swal.fire({
+//                     icon: 'success',
+//                     title: 'Quantity Updated',
+//                     text: result.message,
+//                     timer: 1500,
+//                     showConfirmButton: false,
+//                 });
+//             } else {
+//                 Swal.fire({
+//                     icon: 'error',
+//                     title: 'Update Failed',
+//                     text: result.message,
+//                 });
+//                 // Revert quantity if update failed
+//                 inputField.value = currentQuantity - 1; // Revert to previous value
+//             }
+//         } catch (error) {
+//             console.error('Error:', error);
+//             Swal.fire({
+//                 icon: 'error',
+//                 title: 'Server Error',
+//                 text: 'Something went wrong. Please try again later.',
+//             });
+//         }
+//     }
+// });
+
+// const updateCart = async (productId, quantity) => {
+//         try {
+//             const response = await fetch('/cart/update', {
+//                 method: 'POST',
+//                 headers: { 'Content-Type': 'application/json' },
+//                 body: JSON.stringify({ productId, quantity })
+//             });
+
+//             const result = await response.json();
+
+//             if (result.success) {
+//                 Swal.fire('Success', result.message, 'success').then(() => {
+//                     location.reload();
+//                 });
+//             } else {
+//                 Swal.fire('Error', result.message, 'error');
+//             }
+//         } catch (error) {
+//             console.error(error);
+//             Swal.fire('Error', 'Failed to update cart.', 'error');
+//         }
+//     };
+
+//     document.querySelectorAll('.btn-increase').forEach(button => {
+//         button.addEventListener('click', function () {
+//             const input = this.previousElementSibling;
+//             let currentValue = parseInt(input.value, 10);
+//             const max = parseInt(input.max, 10) || 1;
+
+//             if (currentValue < max) {
+//                 input.value = currentValue + 1;
+//                 updateCart(input.dataset.productId, currentValue + 1);
+//             } else {
+//                 Swal.fire('Warning', 'Maximum quantity reached!', 'warning');
+//             }
+//         });
+//     });
+
+//     document.querySelectorAll('.btn-decrease').forEach(button => {
+//         button.addEventListener('click', function () {
+//             const input = this.nextElementSibling;
+//             let currentValue = parseInt(input.value, 10);
+
+//             if (currentValue > 1) {
+//                 input.value = currentValue - 1;
+//                 updateCart(input.dataset.productId, currentValue - 1);
+//             }
+//         });
+//     });
+			
+		// 	// Quantity input event listeners
+		// 	document.querySelectorAll('.quantity-input').forEach(input => {
+		// 		input.addEventListener('change', function() {
+		// 			const productId = this.getAttribute('data-product-id');
+		// 			const newQuantity = parseInt(this.value);
+		// 			updateQuantity(productId, newQuantity);
+		// 		});
+		// 	});
+		
 		
 			// Remove item event listeners
 			document.querySelectorAll('.remove-item').forEach(button => {

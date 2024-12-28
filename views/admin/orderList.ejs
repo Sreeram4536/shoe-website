@@ -23,6 +23,7 @@
                             <th>Total Amount</th>
                             <th>Order Date</th>
                             <th>Status</th>
+                            <th>Return Status</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -58,6 +59,24 @@
                                     <option value="Delivered" <%= order.status === 'Delivered' ? 'selected' : '' %>>Delivered</option>
                                     <option value="Cancelled" <%= order.status === 'Cancelled' ? 'selected' : '' %>>Cancelled</option>
                                 </select>
+                            </td>
+
+                            <td>
+                                <% if (order.status === 'Return Approved') { %>
+                                    <span class="badge bg-success">Return Approved</span>
+                                    <button class="btn btn-sm btn-danger reject-return-btn" 
+                                            data-order-id="<%= order._id %>">Reject</button>
+                                <% } else if (order.status === 'Return Rejected') { %>
+                                    <span class="badge bg-danger">Return Rejected</span>
+                                    <button class="btn btn-sm btn-success approve-return-btn" 
+                                            data-order-id="<%= order._id %>">Approve</button>
+                                <% } else if (order.status === 'Returned') { %>
+                                    <span class="badge bg-warning">Pending Approval</span>
+                                    <button class="btn btn-sm btn-success approve-return-btn" 
+                                            data-order-id="<%= order._id %>">Approve</button>
+                                    <button class="btn btn-sm btn-danger reject-return-btn" 
+                                            data-order-id="<%= order._id %>">Reject</button>
+                                <% } %>
                             </td>
                             <!-- <td>
                                 <button class="btn btn-sm btn-info view-details-btn" 
@@ -151,7 +170,7 @@
                             title: 'Success!',
                             text: 'Order status updated successfully',
                             icon: 'success',
-                            timer: 2000
+                            // timer: 2000
                         });
                         // Update the data-original-status attribute
                         $(`.status-select[data-order-id="${orderId}"]`).data('original-status', newStatus);
@@ -182,6 +201,77 @@
                     });
                 });
             });
+
+            // Handle approve return button click
+            $('.approve-return-btn').click(function() {
+                const orderId = $(this).data('order-id');
+                Swal.fire({
+                    title: 'Approve Return Request',
+                    text: 'Are you sure you want to approve this return request?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, approve it!',
+                    cancelButtonText: 'No, cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        updateReturnStatus(orderId, 'Return Approved');
+                    }
+                });
+            });
+
+            // Handle reject return button click
+            $('.reject-return-btn').click(function() {
+                const orderId = $(this).data('order-id');
+                Swal.fire({
+                    title: 'Reject Return Request',
+                    text: 'Are you sure you want to reject this return request?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, reject it!',
+                    cancelButtonText: 'No, cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        updateReturnStatus(orderId, 'Return Rejected');
+                    }
+                });
+            });
+
+            // Function to update return status
+            function updateReturnStatus(orderId, newStatus) {
+                $.ajax({
+                    url: `/admin/orders/${orderId}/status`,
+                    method: 'POST',
+                    data: { status: newStatus },
+                    success: function(response) {
+                        Swal.fire({
+                            title: 'Success!',
+                            text: 'Return request status updated successfully',
+                            icon: 'success',
+                            // timer: 2000
+                        }).then(() => {
+                            location.reload(); // Reload the page after success
+                        });
+                        // Update the UI accordingly
+                        const badgeClass = newStatus === 'Return Approved' ? 'bg-success' : 'bg-danger';
+                        const badgeText = newStatus === 'Return Approved' ? 'Return Approved' : 'Return Rejected';
+                        // $(`tr[data-order-id="${orderId}"] td:last-child`).html(`
+                        //     <span class="badge ${badgeClass}">${badgeText}</span>
+                        // `);
+
+                         // Replace the Pending Approval badge with the new badge
+                    $(`#return-status-${orderId}`).replaceWith(`
+                        <span class="badge ${badgeClass}">${badgeText}</span>
+                    `);
+                    },
+                    error: function(xhr) {
+                        Swal.fire({
+                            title: 'Error!',
+                            text: 'Failed to update return request status',
+                            icon: 'error'
+                        });
+                    }
+                });
+            }
         });
     </script>
 </body>

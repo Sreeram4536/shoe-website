@@ -75,6 +75,21 @@ Smartphone Compatible web template, free webdesigns for Nokia, Samsung, LG, Sony
 	.product-image {
 		position: relative;
 	}
+
+	.category-item.active {
+    background-color:#2865a7;
+    color: #fff;
+    font-weight: bold;
+    border-radius: 5px;
+}
+
+.sort-btn.active {
+    background-color: #2865a7;
+    color: #fff;
+    font-weight: bold;
+    border-radius: 5px;
+}
+
 	  </style>
 	  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
@@ -189,7 +204,8 @@ Smartphone Compatible web template, free webdesigns for Nokia, Samsung, LG, Sony
 					<div class="category-list">
 						<% categories.forEach(category => { %>
 							<a href="/user/shop?category=<%= category._id %>&search=<%= searchQuery %>&order=<%= sortOrder %>&page=<%= currentPage %>" 
-							   class="category-item">
+								
+							    class="category-item <%= String(selectedCategory) === String(category._id) ? 'active' : '' %>">
 								<%= category.name %>
 							</a>
 						<% }) %>
@@ -200,33 +216,33 @@ Smartphone Compatible web template, free webdesigns for Nokia, Samsung, LG, Sony
 				<div class="filter-section">
 					<h3 class="filter-heading">Sort by Price</h3>
 					<div class="price-sort-buttons">
-						<a href="/user/shop?order=asc&page=<%= currentPage %>&category=<%= selectedCategory %>&search=<%= searchQuery %>" class="sort-btn">
+						<a href="/user/shop?order=asc&page=<%= currentPage %>&category=<%= selectedCategory %>&search=<%= searchQuery %>" class="sort-btn <%= sortOrder === 'asc' ? 'active' : '' %>">
 							<i class="fa fa-sort-amount-asc"></i> Low to High
 						</a>
-						<a href="/user/shop?order=desc&page=<%= currentPage %>&category=<%= selectedCategory %>&search=<%= searchQuery %>" class="sort-btn">
+						<a href="/user/shop?order=desc&page=<%= currentPage %>&category=<%= selectedCategory %>&search=<%= searchQuery %>" class="sort-btn <%= sortOrder === 'desc' ? 'active' : '' %>">
 							<i class="fa fa-sort-amount-desc"></i> High to Low
 						</a>
 					</div>
 				</div>
 	
 				<!-- Price Range Filter -->
-				<div class="filter-section">
+				<!-- <div class="filter-section">
 					<h3 class="filter-heading">Price Range</h3>
 					<div class="price-range-buttons">
-						<a href="/user/filterPrice?gt=0&lt=500&page=<%= currentPage %>" class="range-btn">
+						<a href="/user/filterPrice?gt=0&lt=500&page=</%= currentPage %>" class="range-btn">
 							<i class="fa fa-inr"></i> Under 500
 						</a>
-						<a href="/user/filterPrice?gt=500&lt=1000&page=<%= currentPage %>" class="range-btn">
+						<a href="/user/filterPrice?gt=500&lt=1000&page=</%= currentPage %>" class="range-btn">
 							<i class="fa fa-inr"></i> 500 - 1000
 						</a>
-						<a href="/user/filterPrice?gt=1000&lt=1500&page=<%= currentPage %>" class="range-btn">
+						<a href="/user/filterPrice?gt=1000&lt=1500&page=</%= currentPage %>" class="range-btn">
 							<i class="fa fa-inr"></i> 1000 - 1500
 						</a>
-						<a href="/user/filterPrice?gt=1500&lt=1000000&page=<%= currentPage %>" class="range-btn">
+						<a href="/user/filterPrice?gt=1500&lt=1000000&page=</%= currentPage %>" class="range-btn">
 							<i class="fa fa-inr"></i> Above 1500
 						</a>
 					</div>
-				</div>
+				</div> -->
 			</div>
 					<!-- Product Grid Section -->
 <div class="product-grid-section">

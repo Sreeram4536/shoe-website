@@ -136,54 +136,191 @@ const getMonthlySales = async () => {
     return monthlySales.length > 0 ? monthlySales[0].totalSales : 0;
 };
 
+// const getSalesData = async (req, res) => {
+//     const { filter, startDate, endDate } = req.query;
+//     let matchStage = {};
+    
+//     // Define the match stage based on the filter
+//     if (filter === 'daily') {
+//         matchStage = {
+//             $match: {
+//                 invoiceDate: {
+//                     $gte: new Date(new Date().setHours(0, 0, 0, 0)), // Start of today
+//                     $lt: new Date(new Date().setHours(23, 59, 59, 999)) // End of today
+//                 }
+//             }
+//         };
+//     } else if (filter === 'monthly') {
+//         matchStage = {
+//             $match: {
+//                 invoiceDate: {
+//                     $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1), // Start of the month
+//                     $lt: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1) // Start of next month
+//                 }
+//             }
+//         };
+//     } else if (startDate && endDate) {
+//         matchStage = {
+//             $match: {
+//                 invoiceDate: {
+//                     $gte: new Date(startDate),
+//                     $lt: new Date(new Date(endDate).setHours(23, 59, 59, 999)) // End of the selected date
+//                 }
+//             }
+//         };
+//     }
+
+//     try {
+//         const salesData = await Order.aggregate([
+//             matchStage,
+//             {
+//                 $group: {
+//                     _id: {
+//                         year: { $year: "$invoiceDate" },
+//                         month: { $month: "$invoiceDate" },
+//                         day: { $dayOfMonth: "$invoiceDate" }
+//                     },
+//                     totalSales: { $sum: "$finalAmount" }
+//                 }
+//             },
+//             { $sort: { "_id.year": 1, "_id.month": 1, "_id.day": 1 } }
+//         ]);
+
+//         res.json({ success: true, data: salesData });
+//     } catch (error) {
+//         console.error('Error fetching sales data:', error);
+//         res.json({ success: false, error: 'Error fetching sales data' });
+//     }
+// };
+
 const getSalesData = async (req, res) => {
     const { filter, startDate, endDate } = req.query;
     let matchStage = {};
-    
-    // Define the match stage based on the filter
+    let groupStage = {};
+    let sortStage = {};
+
+    const today = new Date();
+
     if (filter === 'daily') {
+        // Last 5 Days
+        const startOfFiveDaysAgo = new Date(today);
+        startOfFiveDaysAgo.setDate(today.getDate() - 4); // Go back 4 days
+
         matchStage = {
             $match: {
                 invoiceDate: {
-                    $gte: new Date(new Date().setHours(0, 0, 0, 0)), // Start of today
-                    $lt: new Date(new Date().setHours(23, 59, 59, 999)) // End of today
+                    $gte: new Date(startOfFiveDaysAgo.setHours(0, 0, 0, 0)),
+                    $lt: new Date(today.setHours(23, 59, 59, 999))
                 }
             }
         };
+
+        groupStage = {
+            $group: {
+                _id: {
+                    year: { $year: "$invoiceDate" },
+                    month: { $month: "$invoiceDate" },
+                    day: { $dayOfMonth: "$invoiceDate" }
+                },
+                totalSales: { $sum: "$finalAmount" }
+            }
+        };
+
+        sortStage = { "_id.year": 1, "_id.month": 1, "_id.day": 1 };
+
+    } else if (filter === 'weekly') {
+        // Group by week
+        matchStage = {
+            $match: {
+                invoiceDate: {
+                    $gte: new Date(today.getFullYear(), 0, 1), // Start of the year
+                    $lt: new Date(today.getFullYear() + 1, 0, 1) // Start of next year
+                }
+            }
+        };
+
+        groupStage = {
+            $group: {
+                _id: {
+                    year: { $year: "$invoiceDate" },
+                    week: { $week: "$invoiceDate" } // Week number
+                },
+                totalSales: { $sum: "$finalAmount" }
+            }
+        };
+
+        sortStage = { "_id.year": 1, "_id.week": 1 };
+
     } else if (filter === 'monthly') {
+        // Group by month
         matchStage = {
             $match: {
                 invoiceDate: {
-                    $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1), // Start of the month
-                    $lt: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1) // Start of next month
+                    $gte: new Date(today.getFullYear(), 0, 1), // Start of the year
+                    $lt: new Date(today.getFullYear() + 1, 0, 1) // Start of next year
                 }
             }
         };
+
+        groupStage = {
+            $group: {
+                _id: {
+                    year: { $year: "$invoiceDate" },
+                    month: { $month: "$invoiceDate" }
+                },
+                totalSales: { $sum: "$finalAmount" }
+            }
+        };
+
+        sortStage = { "_id.year": 1, "_id.month": 1 };
+
+    } else if (filter === 'yearly') {
+        // Group by year
+        matchStage = {
+            $match: {
+                invoiceDate: { $exists: true }
+            }
+        };
+
+        groupStage = {
+            $group: {
+                _id: { year: { $year: "$invoiceDate" } },
+                totalSales: { $sum: "$finalAmount" }
+            }
+        };
+
+        sortStage = { "_id.year": 1 };
+
     } else if (startDate && endDate) {
+        // Custom date range
         matchStage = {
             $match: {
                 invoiceDate: {
                     $gte: new Date(startDate),
-                    $lt: new Date(new Date(endDate).setHours(23, 59, 59, 999)) // End of the selected date
+                    $lt: new Date(new Date(endDate).setHours(23, 59, 59, 999))
                 }
             }
         };
+
+        groupStage = {
+            $group: {
+                _id: {
+                    year: { $year: "$invoiceDate" },
+                    month: { $month: "$invoiceDate" },
+                    day: { $dayOfMonth: "$invoiceDate" }
+                },
+                totalSales: { $sum: "$finalAmount" }
+            }
+        };
+
+        sortStage = { "_id.year": 1, "_id.month": 1, "_id.day": 1 };
     }
 
     try {
         const salesData = await Order.aggregate([
             matchStage,
-            {
-                $group: {
-                    _id: {
-                        year: { $year: "$invoiceDate" },
-                        month: { $month: "$invoiceDate" },
-                        day: { $dayOfMonth: "$invoiceDate" }
-                    },
-                    totalSales: { $sum: "$finalAmount" }
-                }
-            },
-            { $sort: { "_id.year": 1, "_id.month": 1, "_id.day": 1 } }
+            groupStage,
+            { $sort: sortStage }
         ]);
 
         res.json({ success: true, data: salesData });
@@ -192,6 +329,7 @@ const getSalesData = async (req, res) => {
         res.json({ success: false, error: 'Error fetching sales data' });
     }
 };
+
 
 const getTopSellingProducts = async (req, res) => {
     const topProducts = await Product.find()
@@ -236,6 +374,8 @@ const logout = async(req,res)=>{
         
     }
 }
+
+
 
 module.exports={
     loadLogin,

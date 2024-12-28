@@ -245,8 +245,8 @@
 
 									<!-- GST Row -->
 									<tr>
-										<td colspan="2" class="text-end">GST (18%):</td>
-										<td class="text-end">₹<span id="gstAmount"><%= (totalAmount * 0.18).toFixed(2) %></span></td>
+										<td colspan="2" class="text-end">GST (5%):</td>
+										<td class="text-end">₹<span id="gstAmount"><%= (totalAmount * 0.05).toFixed(2) %></span></td>
 									</tr>
 
 									<!-- Discount Row (Initially Hidden) -->
@@ -273,7 +273,7 @@
 										<td colspan="2" class="text-end">Grand Total:</td>
 										<td class="text-end">
 											<span id="grandTotal">
-												<%= (totalAmount + 0 ).toFixed(2) %> <!-- Total including delivery and GST -->
+												<%= (totalAmount + 0 +(totalAmount * 0.05)).toFixed(2) %> <!-- Total including delivery and GST -->
 											</span>
 											</span>
 										</td>

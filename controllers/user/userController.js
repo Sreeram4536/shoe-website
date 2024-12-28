@@ -693,7 +693,7 @@ const getProductDetails = async (req, res) => {
 // };
 
 const filterProduct = async (req, res) => {
-    // filter logic is now integrated into loadShop.
+    
     res.redirect('/user/shop'); // Redirect to loadShop with proper query params
 };
 

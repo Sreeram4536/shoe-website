@@ -55,11 +55,11 @@ const getSalesReport = async (req, res) => {
     console.log('Report Type:', req.body.reportType);
 
     try {
-        const { reportType, startDate, endDate } = req.body;
+        const { reportType, startDate, endDate, page = 1, limit = 2 } = req.body;
 
         // Validate report type
         if (!reportType) {
-            return res.status(STATUS_CODES.BAD_REQUEST).json({ 
+            return res.status(400).json({ 
                 success: false, 
                 message: 'Report type is required' 
             });
@@ -98,7 +98,7 @@ const getSalesReport = async (req, res) => {
 
             case 'custom':
                 if (!startDate || !endDate) {
-                    return res.status(STATUS_CODES.BAD_REQUEST).json({ 
+                    return res.status(400).json({ 
                         success: false, 
                         message: 'Start and end dates are required for custom report' 
                     });
@@ -110,32 +110,38 @@ const getSalesReport = async (req, res) => {
                 break;
 
             default:
-                return res.status(STATUS_CODES.BAD_REQUEST).json({ 
+                return res.status(400).json({ 
                     success: false, 
                     message: 'Invalid report type' 
                 });
         }
 
-        // Fetch sales data
+        // Fetch sales data with pagination
         const salesData = await Order.find(dateQuery)
             .populate('userId', 'name email')
             .populate('orderedItems.product')
-            .sort({ createdOn: -1 });
+            .sort({ createdOn: -1 })
+            .skip((page - 1) * limit)
+            .limit(limit);
 
-            console.log("data is:",salesData);
+        // Get total count for pagination
+        const totalSales = await Order.countDocuments(dateQuery);
+
         // Calculate summary
         const summary = await calculateSalesSummary(salesData);
         
-        // Return response
+        // Return response with pagination info
         res.json({ 
             success: true, 
             sales: salesData, 
-            summary 
+            summary,
+            totalPages: Math.ceil(totalSales / limit),
+            currentPage: page
         });
 
     } catch (error) {
         console.error('Error generating sales report:', error);
-        res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ 
+        res.status(500).json({ 
             success: false, 
             message: 'Error generating sales report',
             error: error.message 

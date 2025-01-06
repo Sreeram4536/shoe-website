@@ -58,6 +58,12 @@
         <div id="reportContainer" class="table-container">
             <!-- This is where the report will be displayed -->
         </div>
+
+        <div id="paginationControls" class="text-center mt-4">
+            <button id="prevPage" class="btn btn-secondary" style="display: none;">Previous</button>
+            <span id="pageInfo"></span>
+            <button id="nextPage" class="btn btn-secondary" style="display: none;">Next</button>
+        </div>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
     <script>
@@ -73,6 +79,9 @@
                 });
             }
         });
+
+        let currentPage = 1; // Track current page
+        let totalPages = 1; // Track total pages
 
         document.getElementById('generateReport').addEventListener('click', async () => {
             const form = document.getElementById('salesReportForm');
@@ -105,7 +114,7 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(reportData)
+                    body: JSON.stringify({ ...reportData, page: currentPage }) // Send current page
                 });
 
                 if (!response.ok) {
@@ -171,6 +180,9 @@
                         </div>
                     `;
                     reportContainer.appendChild(summaryDiv);
+
+                    totalPages = data.totalPages; // Set total pages
+                    updatePaginationControls(); // Update pagination controls
                 } else {
                     reportContainer.innerHTML = `<p>${data.message}</p>`;
                 }
@@ -254,6 +266,26 @@
             } catch (error) {
                 console.error('Download error:', error);
                 alert('Failed to download Excel');
+            }
+        });
+
+        function updatePaginationControls() {
+            document.getElementById('pageInfo').innerText = `Page ${currentPage} of ${totalPages}`;
+            document.getElementById('prevPage').style.display = currentPage > 1 ? 'inline-block' : 'none';
+            document.getElementById('nextPage').style.display = currentPage < totalPages ? 'inline-block' : 'none';
+        }
+
+        document.getElementById('prevPage').addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                document.getElementById('generateReport').click(); // Re-generate report
+            }
+        });
+
+        document.getElementById('nextPage').addEventListener('click', () => {
+            if (currentPage < totalPages) {
+                currentPage++;
+                document.getElementById('generateReport').click(); // Re-generate report
             }
         });
     </script>

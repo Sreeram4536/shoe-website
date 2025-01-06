@@ -1,4 +1,5 @@
 const Order = require('../../models/orderSchema');
+const STATUS_CODES = require('../../constants/statusCodes');
 const ExcelJS = require('exceljs');
 const PDFDocument = require('pdfkit');
 // const { Table } = require('pdfkit-table');
@@ -43,7 +44,7 @@ const renderSalesReport = async (req, res) => {
         });
     } catch (error) {
         console.error('Error rendering sales report:', error);
-        res.status(500).send('Error loading sales report');
+        res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send('Error loading sales report');
     }
 };
 
@@ -58,7 +59,7 @@ const getSalesReport = async (req, res) => {
 
         // Validate report type
         if (!reportType) {
-            return res.status(400).json({ 
+            return res.status(STATUS_CODES.BAD_REQUEST).json({ 
                 success: false, 
                 message: 'Report type is required' 
             });
@@ -97,7 +98,7 @@ const getSalesReport = async (req, res) => {
 
             case 'custom':
                 if (!startDate || !endDate) {
-                    return res.status(400).json({ 
+                    return res.status(STATUS_CODES.BAD_REQUEST).json({ 
                         success: false, 
                         message: 'Start and end dates are required for custom report' 
                     });
@@ -109,7 +110,7 @@ const getSalesReport = async (req, res) => {
                 break;
 
             default:
-                return res.status(400).json({ 
+                return res.status(STATUS_CODES.BAD_REQUEST).json({ 
                     success: false, 
                     message: 'Invalid report type' 
                 });
@@ -134,7 +135,7 @@ const getSalesReport = async (req, res) => {
 
     } catch (error) {
         console.error('Error generating sales report:', error);
-        res.status(500).json({ 
+        res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({ 
             success: false, 
             message: 'Error generating sales report',
             error: error.message 
@@ -246,7 +247,7 @@ const downloadExcel = async (req, res) => {
 
     } catch (error) {
         console.error('Excel Download Error:', error);
-        res.status(500).send('Error generating Excel: ' + error.message);
+        res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send('Error generating Excel: ' + error.message);
     }
 };
 
@@ -406,7 +407,7 @@ const downloadPDF = async (req, res) => {
 
     } catch (error) {
         console.error('Error generating PDF:', error);
-        res.status(500).json({
+        res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
             success: false,
             message: 'Error generating PDF',
             error: error.message
@@ -415,118 +416,7 @@ const downloadPDF = async (req, res) => {
 };
 
 
-// const downloadPDF = async (req, res) => {
-//     try {
-//         const { reportType, startDate, endDate } = req.query;
 
-//         // Determine date range based on report type
-//         let dateQuery = {
-//             status: 'Delivered'
-//         };
-//         const now = new Date();
-
-//         switch (reportType) {
-//             case 'daily':
-//                 dateQuery.createdOn = {
-//                     $gte: new Date(now.setHours(0, 0, 0, 0)),
-//                     $lte: new Date(now.setHours(23, 59, 59, 999))
-//                 };
-//                 break;
-
-//             case 'weekly':
-//                 const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
-//                 dateQuery.createdOn = {
-//                     $gte: new Date(startOfWeek.setHours(0, 0, 0, 0)),
-//                     $lte: new Date()
-//                 };
-//                 break;
-
-//             case 'monthly':
-//                 const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-//                 dateQuery.createdOn = {
-//                     $gte: startOfMonth,
-//                     $lte: new Date()
-//                 };
-//                 break;
-
-//             case 'custom':
-//                 if (startDate && endDate) {
-//                     dateQuery.createdOn = {
-//                         $gte: new Date(startDate),
-//                         $lte: new Date(new Date(endDate).setHours(23, 59, 59, 999))
-//                     };
-//                 }
-//                 break;
-//         }
-
-//         // Fetch sales data with more robust population
-//         const salesData = await Order.find(dateQuery)
-//             .populate('userId', 'name email')
-//             .populate({
-//                 path: 'orderedItems.product',
-//                 model: 'Product',
-//                 select: 'productName price'
-//             })
-//             .sort({ createdOn: -1 });
-
-//         // Calculate summary
-//         const summary = await calculateSalesSummary(salesData);
-
-//         const doc = new PDFDocument({ margin: 30, size: 'A4' });
-//         res.setHeader('Content-Type', 'application/pdf');
-//         res.setHeader('Content-Disposition', `attachment; filename=sales-report-${Date.now()}.pdf`);
-//         doc.pipe(res);
-
-//         // Add title
-//         doc.fontSize(20).text('Sales Report', { align: 'center' });
-//         doc.moveDown();
-
-//         // Create table data
-//         const tableData = {
-//             headers: ['Order ID', 'Date', 'Customer', 'Products', 'Total', 'Discount', 'Final Amount'],
-//             rows: salesData.map(order => [
-//                 order.orderId,
-//                 new Date(order.createdOn).toLocaleDateString(),
-//                 order.userId?.name || 'N/A',
-//                 order.orderedItems.map(item => 
-//                     `${item.product?.productName || 'N/A'} (x${item.quantity})`
-//                 ).join(', '),
-//                 `₹${order.totalPrice?.toFixed(2) || '0.00'}`,
-//                 `₹${(order.discount || 0).toFixed(2)}`,
-//                 `₹${order.finalAmount?.toFixed(2) || '0.00'}`
-//             ])
-//         };
-
-//         // Draw the table
-//         await doc.table(tableData, {
-//             prepareHeader: () => doc.font('Helvetica-Bold').fontSize(10),
-//             prepareRow: () => doc.font('Helvetica').fontSize(10),
-//             width: 550,
-//             padding: 5,
-//             divider: {
-//                 header: { disabled: false, width: 2, opacity: 1 },
-//                 horizontal: { disabled: false, width: 0.5, opacity: 0.5 }
-//             }
-//         });
-
-//         // Add summary
-//         doc.addPage();
-//         doc.fontSize(14).text('Summary', { align: 'center' });
-//         doc.moveDown();
-//         doc.fontSize(12)
-//             .text(`Total Orders: ${summary.totalOrders}`)
-//             .text(`Total Sales: ₹${summary.totalSales.toFixed(2)}`)
-//             .text(`Total Discount: ₹${summary.totalDiscount.toFixed(2)}`)
-//             .text(`Average Order Value: ₹${summary.averageOrderValue.toFixed(2)}`);
-
-//         doc.end();
-//     } catch (error) {
-//         console.error('Error downloading PDF:', error);
-//         res.status(500).send('Error generating PDF: ' + error.message);
-//     }
-// };
-
-// Export individual functions instead of an object
 module.exports = { 
     renderSalesReport,
     getSalesReport,

@@ -4,6 +4,7 @@ const Brand = require("../../models/brandSchema");
 const fs = require('fs');
 const path = require('path');
 const sharp = require('sharp');
+const STATUS_CODES = require('../../constants/statusCodes');
 
 
 // Fetch the product add page
@@ -40,75 +41,13 @@ const addProducts = async (req, res) => {
                 }
             }
         
-        // const errors = {};
-
-        // // Validation checks for required fields
-        // if (!products.productName || products.productName.trim() === "") errors.productName = "Please enter a product name.";
-        // if (!products.description || products.description.trim() === "") errors.description = "Please enter a product description.";
-        // if (!products.regularPrice || isNaN(products.regularPrice) || parseFloat(products.regularPrice) <= 0) errors.regularPrice = "Please enter a valid regular price.";
-        // if (!products.salePrice || isNaN(products.salePrice) || parseFloat(products.salePrice) <= 0) errors.salePrice = "Please enter a valid sale price.";
-        // if (!products.color || products.color.trim() === "") errors.color = "Please enter a color.";
-        // if (!products.quantity || isNaN(products.quantity) || parseInt(products.quantity) <= 0) errors.quantity = "Please enter a valid quantity.";
-
-        // // Check if at least one image is uploaded
-        // if (!req.files || req.files.length === 0) errors.images = "Please upload at least one image.";
-
-        // // Check for existing product name
-        // const productExists = await Product.findOne({ productName: products.productName });
-        // if (productExists) errors.productName = "Product name already exists. Please choose another name.";
-
-        // // If validation fails, render the form again with errors
-        // if (Object.keys(errors).length > 0) {
-        //     const category = await Category.find({ isListed: true });
-        //     const brand = await Brand.find({ isBlocked: false });
-        //     return res.render("admin/product-add", {
-        //         cat: category,
-        //         brand: brand,
-        //         errors,
-        //         formData: products
-        //     });
-        // }
-
-        // // Process images and save the product
-        // const images = [];
-        // if (req.files && req.files.length > 0) {
-        //     for (let i = 0; i < req.files.length; i++) {
-        //         const originalImagePath = req.files[i].path;
-
-        //         // Resize and crop the uploaded image
-        //         const resizedImageName = `resized-${Date.now()}-${req.files[i].filename}`;
-        //         const resizedImagePath = path.join('public', 'uploads', 'product-images', resizedImageName);
-
-        //         // Resize the image and save it
-        //         await sharp(originalImagePath).resize({ width: 440, height: 440 }).toFile(resizedImagePath);
-
-        //         // Push the resized image name into the images array
-        //         images.push(resizedImageName);
-        //     }
-        // }
-
-        // console.log(req.files)
-
-        // // Handle cropped images if they are included (assuming they are sent in the request body)
-        // if (req.body.croppedImages) {
-        //     const croppedImages = JSON.parse(req.body.croppedImages); // Array of base64 encoded images
-        //     for (let i = 0; i < croppedImages.length; i++) {
-        //         const base64Data = croppedImages[i].replace(/^data:image\/\w+;base64,/, "");
-        //         const buffer = Buffer.from(base64Data, 'base64');
-        //         const croppedImageName = `cropped-${Date.now()}-${i + 1}.jpg`;
-        //         const croppedImagePath = path.join('public', 'uploads', 'product-images', croppedImageName);
-
-        //         // Write the cropped image to the disk
-        //         fs.writeFileSync(croppedImagePath, buffer);
-                // images.push(croppedImageName);
-        //     }
-        // }
+      
 
         // Find the category ID based on the category name
         const categoryId = await Category.findOne({ name: products.category });
 
         if(!categoryId){
-            return res.status(400).join("Invalid Category Name")
+            return res.status(STATUS_CODES.BAD_REQUEST).join("Invalid Category Name")
         }
 
         // Create and save the new product
@@ -201,7 +140,7 @@ const addProductOffer=async(req,res)=>{
         
     } catch (error) {
         res.redirect("/admin/pageerror");
-        res.status(500).json({status:false,message:"Internal Server Error"});
+        res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({status:false,message:"Internal Server Error"});
         
     }
 }
@@ -247,7 +186,7 @@ const unblockProduct=async(req,res)=>{
 const getEditProduct = async (req, res) => {
     try {
         const id = req.query.id;
-        const listedCategories = await Category.find({isListed:true})
+        const listedCategories = await Category.find({ isListed: true });
         const product = await Product.findOne({ _id: id });
         const category = await Category.find({});
         const brand = await Brand.find({});
@@ -255,7 +194,8 @@ const getEditProduct = async (req, res) => {
             product: product,
             cat: category,
             brand: brand,
-            listedCategories
+            listedCategories,
+            existingImages: product.productImage
         });
     } catch (error) {
         res.send("pageError");
@@ -273,7 +213,7 @@ const editProduct = async (req, res) => {
         });
 
         if (existingProduct) {
-            return res.status(400).json({ error: "Product already exists" });
+            return res.status(STATUS_CODES.BAD_REQUEST).json({ error: "Product already exists" });
         }
 
         const images = [];
@@ -321,7 +261,7 @@ const deleteSingleImage = async (req, res) => {
         res.send({ status: "success", message: "Image deleted" });
     } catch (error) {
         console.log(error);
-        res.status(500).send({ status: "error", message: "Failed to delete image" });
+        res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send({ status: "error", message: "Failed to delete image" });
     }
 };
 
@@ -333,7 +273,7 @@ const updateProductQuantity = async (req, res) => {
         console.log('Updating product:', productId, 'with quantity:', quantity); // Add logging
 
         if (quantity < 0) {
-            return res.status(400).json({
+            return res.status(STATUS_CODES.BAD_REQUEST).json({
                 success: false,
                 message: 'Quantity cannot be negative'
             });
@@ -360,14 +300,14 @@ const updateProductQuantity = async (req, res) => {
 
         console.log('Product updated:', updatedProduct); // Add logging
 
-        res.status(200).json({
+        res.status(STATUS_CODES.OK).json({
             success: true,
             message: 'Quantity updated successfully',
             newStatus: updatedProduct.status
         });
     } catch (error) {
         console.error('Error updating product quantity:', error);
-        res.status(500).json({
+        res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
             success: false,
             message: 'Internal Server Error'
         });

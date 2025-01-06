@@ -246,7 +246,7 @@
     }
     
     
-    
+    const existingImages = <%- JSON.stringify(existingImages) %>;
     
     function validateForm() {
        let imageDatas = false
@@ -295,10 +295,24 @@
                    displayErrorMessage('color-error', 'Please enter a color.');
                    isValid = false;
                }
-               if (!imageDatas && images.files.length === 0) {
-                   displayErrorMessage("images-error",'Please select an image.');
-                   isValid = false;
-               }
+            
+            let totalImages = existingImages.length;
+        for (let i = 1; i <= 4; i++) { // Assuming you have 4 input fields for images
+            const input = document.getElementById(`input${i}`);
+            if (input && input.files) {
+                totalImages += input.files.length;
+            }
+        }
+
+        //    if (!imageDatas && images.files.length === 0) {
+            //        displayErrorMessage("images-error",'Please select an image.');
+            //        isValid = false;
+            //    }
+
+        if (totalImages < 3) {
+            displayErrorMessage('images-error', 'Please upload at least 3 images.');
+            isValid = false;
+        }
                return isValid;
            }
           

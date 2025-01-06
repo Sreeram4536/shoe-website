@@ -1,5 +1,6 @@
 const Coupon = require("../../models/couponSchema");
 const mongoose = require("mongoose");
+const STATUS_CODES = require('../../constants/statusCodes');
 
 const loadCoupon = async(req,res)=>{
     try {
@@ -82,7 +83,7 @@ const updateCoupon = async(req,res)=>{
             if(updatedCoupon != null) {
                 res.send("Coupon updated successfully");
             } else {
-                res.status(500).send("Coupon update failed");
+                res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Coupon update failed");
             }
         }
     } catch (error) {
@@ -97,19 +98,19 @@ const deleteCoupon = async(req,res)=>{
         const result = await Coupon.deleteOne({_id:id});
         
         if (result.deletedCount > 0) {
-            return res.status(200).json({
+            return res.status(STATUS_CODES.OK).json({
                 success: true,
                 message: "Coupon deleted successfully"
             });
         } else {
-            return res.status(404).json({
+            return res.status(STATUS_CODES.NOT_FOUND).json({
                 success: false,
                 message: "Coupon not found"
             });
         }
     } catch (error) {
         console.error(error);
-        return res.status(500).json({
+        return res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
             success: false,
             message: "Failed to delete coupon"
         });

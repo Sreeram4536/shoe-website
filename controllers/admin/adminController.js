@@ -5,6 +5,7 @@ const Order = require("../../models/orderSchema");
 const Product = require("../../models/productSchema");
 const Category = require("../../models/categorySchema");
 const Brand = require("../../models/brandSchema");
+const STATUS_CODES = require('../../constants/statusCodes');
 
 const pageerror = async(req,res)=>{
     res.render('admin/admin-error')
@@ -136,62 +137,6 @@ const getMonthlySales = async () => {
     return monthlySales.length > 0 ? monthlySales[0].totalSales : 0;
 };
 
-// const getSalesData = async (req, res) => {
-//     const { filter, startDate, endDate } = req.query;
-//     let matchStage = {};
-    
-//     // Define the match stage based on the filter
-//     if (filter === 'daily') {
-//         matchStage = {
-//             $match: {
-//                 invoiceDate: {
-//                     $gte: new Date(new Date().setHours(0, 0, 0, 0)), // Start of today
-//                     $lt: new Date(new Date().setHours(23, 59, 59, 999)) // End of today
-//                 }
-//             }
-//         };
-//     } else if (filter === 'monthly') {
-//         matchStage = {
-//             $match: {
-//                 invoiceDate: {
-//                     $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1), // Start of the month
-//                     $lt: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1) // Start of next month
-//                 }
-//             }
-//         };
-//     } else if (startDate && endDate) {
-//         matchStage = {
-//             $match: {
-//                 invoiceDate: {
-//                     $gte: new Date(startDate),
-//                     $lt: new Date(new Date(endDate).setHours(23, 59, 59, 999)) // End of the selected date
-//                 }
-//             }
-//         };
-//     }
-
-//     try {
-//         const salesData = await Order.aggregate([
-//             matchStage,
-//             {
-//                 $group: {
-//                     _id: {
-//                         year: { $year: "$invoiceDate" },
-//                         month: { $month: "$invoiceDate" },
-//                         day: { $dayOfMonth: "$invoiceDate" }
-//                     },
-//                     totalSales: { $sum: "$finalAmount" }
-//                 }
-//             },
-//             { $sort: { "_id.year": 1, "_id.month": 1, "_id.day": 1 } }
-//         ]);
-
-//         res.json({ success: true, data: salesData });
-//     } catch (error) {
-//         console.error('Error fetching sales data:', error);
-//         res.json({ success: false, error: 'Error fetching sales data' });
-//     }
-// };
 
 const getSalesData = async (req, res) => {
     const { filter, startDate, endDate } = req.query;

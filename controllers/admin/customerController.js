@@ -1,5 +1,6 @@
 const User=require('../../models/userSchema');
 const mongoose=require('mongoose');
+STATUS_CODES = require('../../constants/statusCodes');
 
 const customerInfo = async (req, res) => {
     try {
@@ -39,7 +40,7 @@ const customerInfo = async (req, res) => {
         
     } catch (error) {
         console.error("Error fetching customer data:", error);
-        res.status(500).send("Error loading customer data.");
+        res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send("Error loading customer data.");
     }
 }
 
@@ -65,44 +66,6 @@ const customerunBlocked=async(req,res)=>{
     }
 }
 
-
-
-// const customerInfo=async(req,res)=>{
-//     try {
-
-//         let search="";
-//         if(req.query.search){
-//             search=req.query.search;
-//         }
-//         let page=1;
-//         if(req.query.page){
-//             page=req.query.page
-//         }
-//         const limit = 3
-//         const data = await User.find({
-//             isAdmin:false,
-//             $or:[
-//                 {name:{$regex:".*"+search+".*"}},
-//                 {email:{$regex:".*"+search+".*"}}
-//             ],
-//         })
-//         .limit(limit*1)
-//         .skip((page-1)*limit)
-//         .exec();
-
-//         const count = await User.find({
-//             isAdmin:false,
-//             $or:[
-//                 {name:{$regex:".*"+search+".*"}},
-//                 {email:{$regex:".*"+search+".*"}}
-//             ],
-//         }).countDocuments();
-//         res.render('admin/customers',{data})
-        
-//     } catch (error) {
-        
-//     }
-// }
 
 module.exports={
     customerInfo,

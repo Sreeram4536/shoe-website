@@ -1,6 +1,7 @@
 const Order = require('../../models/orderSchema');
 const Product = require('../../models/productSchema');
 const Address = require('../../models/addressSchema');
+const STATUS_CODES = require('../../constants/statusCodes');
 
 
 const listOrders = async (req, res) => {
@@ -18,7 +19,7 @@ const listOrders = async (req, res) => {
         res.render('admin/orderList', { orders });
     } catch (error) {
         console.error('Error fetching orders:', error);
-        res.status(500).send('Server Error');
+        res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send('Server Error');
     }
 };
 
@@ -30,7 +31,7 @@ const changeOrderStatus = async (req, res) => {
         const validStatuses = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled','Return Approved', 'Return Rejected'];
         
         if (!validStatuses.includes(status)) {
-            return res.status(400).json({ 
+            return res.status(STATUS_CODES.BAD_REQUEST).json({ 
                 success: false, 
                 message: 'Invalid status' 
             });
@@ -40,7 +41,7 @@ const changeOrderStatus = async (req, res) => {
             .populate('orderedItems.product');
             
         if (!order) {
-            return res.status(404).json({ 
+            return res.status(STATUS_CODES.NOT_FOUND).json({ 
                 success: false, 
                 message: 'Order not found' 
             });
@@ -62,7 +63,7 @@ const changeOrderStatus = async (req, res) => {
             for (const item of order.orderedItems) {
                 const product = await Product.findById(item.product._id);
                 if (product.quantity < item.quantity) {
-                    return res.status(400).json({
+                    return res.status(STATUS_CODES.BAD_REQUEST).json({
                         success: false,
                         message: `Insufficient stock for ${product.productName}`
                     });
@@ -75,13 +76,13 @@ const changeOrderStatus = async (req, res) => {
 
         await order.save();
 
-        res.status(200).json({
+        res.status(STATUS_CODES.OK).json({
             success: true,
             message: 'Order status updated successfully'
         });
     } catch (error) {
         console.error('Error changing order status:', error);
-        res.status(500).json({
+        res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
             success: false,
             message: 'Server Error'
         });
@@ -95,7 +96,7 @@ const cancelOrder = async (req, res) => {
 
         const order = await Order.findOne({ orderId });
         if (!order || order.status !== 'Pending') {
-            return res.status(400).send('Order cannot be cancelled');
+            return res.status(STATUS_CODES.BAD_REQUEST).send('Order cannot be cancelled');
         }
 
         order.status = 'Cancelled';
@@ -111,7 +112,7 @@ const cancelOrder = async (req, res) => {
         res.redirect('/admin/orderList');
     } catch (error) {
         console.error('Error cancelling order:', error);
-        res.status(500).send('Server Error');
+        res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send('Server Error');
     }
 };
 
@@ -122,48 +123,11 @@ const manageInventory = async (req, res) => {
         res.render('admin/inventory', { products });
     } catch (error) {
         console.error('Error fetching inventory:', error);
-        res.status(500).send('Server Error');
+        res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send('Server Error');
     }
 };
 
-// Update product quantity
-// const updateProductQuantity = async (req, res) => {
-//     try {
-//         const { productId } = req.params;
-//         const { quantity } = req.body;
 
-//         if (quantity < 0) {
-//             return res.status(400).json({
-//                 success: false,
-//                 message: 'Quantity cannot be negative'
-//             });
-//         }
-
-//         const product = await Product.findById(productId);
-//         if (!product) {
-//             return res.status(404).json({
-//                 success: false,
-//                 message: 'Product not found'
-//             });
-//         }
-
-//         product.quantity = quantity;
-//         product.status = quantity > 0 ? 'Available' : 'Out of Stock';
-//         await product.save();
-
-//         res.status(200).json({
-//             success: true,
-//             message: 'Quantity updated successfully',
-//             newStatus: product.status
-//         });
-//     } catch (error) {
-//         console.error('Error updating product quantity:', error);
-//         res.status(500).json({
-//             success: false,
-//             message: 'Internal Server Error'
-//         });
-//     }
-// };
 
 const getOrderDetails = async (req, res) => {
     try {
@@ -174,14 +138,14 @@ const getOrderDetails = async (req, res) => {
             .populate('address');
 
         if (!order) {
-            return res.status(404).send('Order not found');
+            return res.status(STATUS_CODES.NOT_FOUND).send('Order not found');
         }
 
         // Render a partial view with order details
         res.render('admin/orderDetails', { order });
     } catch (error) {
         console.error('Error fetching order details:', error);
-        res.status(500).send('Server Error');
+        res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).send('Server Error');
     }
 };
 

@@ -1,6 +1,7 @@
 const User = require('../../models/userSchema');
 const Product = require('../../models/productSchema');
 const Wishlist = require('../../models/wishlistSchema');
+const STATUS_CODES = require('../../constants/statusCodes');
 
 const loadWishlist = async(req,res)=>{
     try {
@@ -26,14 +27,14 @@ const addToWishlist = async(req,res)=>{
 
         const wishlist = await Wishlist.findOne({userId:userId});
         if(user.wishlist.includes(productId)){
-            return res.status(200).json({status:false,message:"Product already in wishlist"})
+            return res.status(STATUS_CODES.OK).json({status:false,message:"Product already in wishlist"})
         }
         user.wishlist.push(productId);
         await user.save();
-        return res.status(200).json({status:true,message:"Product added to wishlist"})
+        return res.status(STATUS_CODES.OK).json({status:true,message:"Product added to wishlist"})
     } catch (error) {
         console.error(error);
-        return res.status(500).json({status:false,message:"Internal server error"})
+        return res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({status:false,message:"Internal server error"})
     }
 }
 
@@ -50,7 +51,7 @@ const removeFromWishlist = async(req,res)=>{
         );
 
         if (!user) {
-            return res.status(404).json({
+            return res.status(STATUS_CODES.NOT_FOUND).json({
                 status: false,
                 message: "User not found"
             });
@@ -60,7 +61,7 @@ const removeFromWishlist = async(req,res)=>{
         
     } catch (error) {
         console.error(error);
-        return res.status(500).json({
+        return res.status(STATUS_CODES.INTERNAL_SERVER_ERROR).json({
             status: false,
             message: "Internal server error"
         });

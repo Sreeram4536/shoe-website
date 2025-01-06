@@ -23,6 +23,7 @@
 
    </style>
    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs/dist/cropper.min.css">
+   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
    <section class="content-main">
        <div class="row">
@@ -46,20 +47,20 @@
                                    class="form-control border" id="product_name">
                                    <div id="productName-error" class="error-message"></div>
                            </div>
-                           <div class="col-lg-4 mb-4">
+                           <!-- <div class="col-lg-4 mb-4">
                                <label class="form-label">Brand</label>
                                <select class="form-select border" name="brand">
-                                  <% for(let i=0;i<brand.length;i++){ %>
-                                       <option value="<%= brand[i].brandname %>">
-                                          <%= brand[i].brandName %>
+                                  </% for(let i=0;i<brand.length;i++){ %>
+                                       <option value="</%= brand[i].brandname %>">
+                                          </%= brand[i].brandName %>
                                        </option>
-                                       <% } %>
+                                       </% } %>
                                       
                                </select>
                                <div id="brand-error" class="error-message"></div>
 
 
-                           </div>
+                           </div> -->
                            <div class="mb-4">
                                <label class="form-label">Full description</label>
                                <input name="descriptionData" value="<%= product.description %>"  class="form-control border"
@@ -112,12 +113,23 @@
                                        <div class="col-sm-6 mb-3">
                                            <label class="form-label">Category</label>
                                            <select class="form-select border" style="width: 150px;" name="category">
-                                             <% for(let i=0;i<cat.length;i++){ %> 
-                                                   <option value="<%= cat[i].name %>">
-                                                    <%= cat[i].name %>
+                                             <!-- </% for(let i=0;i<cat.length;i++){ %> 
+                                                   <option value="</%= cat[i].name %>">
+                                                    </%= cat[i].name %>
                                                       
                                                    </option>
-                                                   <% } %>
+                                                   </% } %> -->
+
+                                                   <% for (let i = 0; i < listedCategories.length; i++) { %>
+                                                    <option value="<%= listedCategories[i]._id %>" 
+                                                        <% if (listedCategories[i]._id.toString() === product.category.toString()) { %> 
+                                                            selected 
+                                                        <% } %>
+                                                    >
+                                                        <%= listedCategories[i].name %>
+                                                    </option>
+                                                <% } %>
+
                                                   
                                            </select>
 
@@ -220,6 +232,8 @@
        </div>
        </div>
    </section>
+   
+
    <script src="https://cdn.jsdelivr.net/npm/cropperjs/dist/cropper.min.js"></script>
 
    <script>
@@ -240,7 +254,7 @@
                clearErrorMessages();
                const name = document.getElementsByName('productName')[0].value;
                const description = document.getElementsByName('descriptionData')[0].value;
-               const brand = document.getElementsByName('brand')[0].value;
+            //    const brand = document.getElementsByName('brand')[0].value;
                const price = document.getElementsByName('regularPrice')[0].value;
                const saleprice = document.getElementsByName('salePrice')[0].value;
                const color = document.getElementsByName('color')[0].value;
@@ -402,29 +416,58 @@
                }
            };
 
-           function deleteSingleImage(imageId,productId){
-            $.ajax({
-                url:"/admin/deleteImage",
-                method:'post',
-                data:{imageNameToServer:imageId,productIdToServer:productId},
-                success:((response)=>{
-                    if(response.status===true){
-                        // Remove the image from the displayed thumbnail
+//            function deleteSingleImage(imageId,productId){
+//             $.ajax({
+//                 url:"/admin/deleteImage",
+//                 method:'post',
+//                 data:{imageNameToServer:imageId,productIdToServer:productId},
+//                 success:((response)=>{
+//                     if(response.status===true){
+//                         // Remove the image from the displayed thumbnail
+//                 $(`[data-image-id='${imageId}']`).remove();
+
+// // Update the `imageDatas` hidden input to remove the deleted image ID
+// let imageDatasInput = document.getElementById("imageDatas");
+// let currentImages = imageDatasInput.value.split(',');
+
+// // Remove the deleted image ID from the array
+// let updatedImages = currentImages.filter(image => image !== imageId);
+
+// // Update the hidden input with the new array as a comma-separated string
+// imageDatasInput.value = updatedImages.join(',');
+//                     }
+//                 })
+//             })
+//            }
+
+function deleteSingleImage(imageId, productId) {
+    console.log("Delete function called for image:", imageId, "Product ID:", productId); // Debugging line
+    $.ajax({
+        url: "/admin/deleteImage",
+        method: 'post',
+        data: { imageNameToServer: imageId, productIdToServer: productId },
+        success: (response) => {
+            console.log("AJAX Success:", response); // Debugging line
+            if (response.status === true || response.status === "success") {
+                // Remove the image from the displayed thumbnail
                 $(`[data-image-id='${imageId}']`).remove();
 
-// Update the `imageDatas` hidden input to remove the deleted image ID
-let imageDatasInput = document.getElementById("imageDatas");
-let currentImages = imageDatasInput.value.split(',');
+                // Update the hidden input with image data
+                let imageDatasInput = document.getElementById("imageDatas");
+                let currentImages = imageDatasInput.value.split(',');
 
-// Remove the deleted image ID from the array
-let updatedImages = currentImages.filter(image => image !== imageId);
+                let updatedImages = currentImages.filter(image => image !== imageId);
+                imageDatasInput.value = updatedImages.join(',');
+            } else {
+                console.error("Failed to delete image:", response.message);
+            }
+        },
+        error: (xhr, status, error) => {
+            console.error("AJAX Error:", error);
+        }
+    });
+}
 
-// Update the hidden input with the new array as a comma-separated string
-imageDatasInput.value = updatedImages.join(',');
-                    }
-                })
-            })
-           }
            
        </script>
     

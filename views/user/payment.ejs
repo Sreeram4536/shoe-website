@@ -377,6 +377,7 @@ document.getElementById('orderBtn').addEventListener('click', async function (e)
     const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
     const chosenAddress = document.querySelector('input[name="chosenAddress"]').value;
     const totalAmount = Number('<%= totalAmount %>');
+    const finalAmount = Number('<%= finalAmount %>');
 
     try {
         // Step 1: Create Order First
@@ -407,7 +408,7 @@ document.getElementById('orderBtn').addEventListener('click', async function (e)
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    amount: totalAmount * 100, // Amount in paise
+                    amount: finalAmount * 100, // Amount in paise
                     orderId // Pass the orderId to link with Razorpay order
                 })
             });
@@ -421,7 +422,7 @@ document.getElementById('orderBtn').addEventListener('click', async function (e)
             // Step 3: Initialize Razorpay
             const options = {
                 key: '<%= process.env.RAZORPAY_KEY_ID %>',
-                amount: totalAmount * 100,
+                amount: finalAmount * 100,
                 currency: 'INR',
                 name: 'Downy Shoes',
                 description: 'Order Payment',

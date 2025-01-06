@@ -245,7 +245,7 @@
                                <hr>
                                <p class="d-flex justify-content-between mb-0 fw-bold">
                                    <span>Total:</span>
-                                   <span>₹<%= (order.finalAmount + (order.totalPrice * 0.05)).toFixed(2) %></span> <!-- Updated total calculation -->
+                                   <span>₹<%= order.finalAmount %></span> <!-- Updated total calculation -->
                                </p>
                            </div>
                        </div>
@@ -253,7 +253,7 @@
 
                         <!-- Action Buttons -->
                         <div class="text-center">
-                            <% if (order.status !== 'Cancelled') { %>
+                            <% if (order.status == 'Delivered') { %>
                                 <a href="/user/order/<%= order._id %>/download-invoice" 
                                    class="btn btn-primary me-2">
                                     <i class="fas fa-file-download"></i> Download Invoice

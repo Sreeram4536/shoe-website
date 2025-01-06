@@ -401,7 +401,7 @@ const checkoutPage = async (req, res) => {
             totalAmount += item.totalPrice; // Each item's totalPrice should already be calculated
         });
 
-        // Render the checkout page with cart items, total amount, and addresses
+        
         res.render('user/checkout', {
             cartItems: cart.items, // Send cart items to the frontend
             totalAmount: totalAmount, // Send the total amount to the frontend
@@ -656,7 +656,7 @@ const placeOrder = async (req, res) => {
 
             // Get coupon data from session if it exists
             const couponDiscount = req.session.couponData ? req.session.couponData.discount : 0;
-            const finalAmount = req.session.couponData ? req.session.couponData.finalAmount : totalAmount;
+            const finalAmount = req.session.couponData ? req.session.couponData.finalAmount : (totalAmount + 0 +(totalAmount * 0.05)).toFixed(2);
 
             // If payment method is wallet, check balance and update wallet
             if (paymentMethod === 'Wallet') {
@@ -784,7 +784,7 @@ const paymentPage = async (req, res) => {
         const totalAmount = cart.items.reduce((total, item) => 
             total + (item.quantity * item.productId.salePrice), 0);
 
-        console.log("total amnt",totalAmount);
+        const finalAmount = (totalAmount + 0 +(totalAmount * 0.05)).toFixed(2)
         
 
         // Fetch the address document
@@ -805,6 +805,7 @@ const paymentPage = async (req, res) => {
         res.render('user/payment', {
             selectedAddress,
             totalAmount,
+            finalAmount,
             user,
             session: req.session
         });
@@ -897,7 +898,7 @@ const applyCoupon = async (req, res) => {
 
         // Calculate final amount after discount
         const discount = coupon.offerPrice;
-        const finalAmount = totalAmount - discount;
+        const finalAmount = (totalAmount + 0 +(totalAmount * 0.05)).toFixed(2)- discount;
 
         // Store in session
         req.session.couponData = {

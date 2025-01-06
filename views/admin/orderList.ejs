@@ -40,8 +40,11 @@
                                     <% order.orderedItems.forEach(item => { %>
                                         <div class="mb-1">
                                             <small>
-                                                <%= item.product.productName %> x <%= item.quantity %>
-                                                (₹<%= item.price %>)
+                                                <% if (item.product) { %>
+                                                    <%= item.product.productName %> x <%= item.quantity %> (₹<%= item.price %>)
+                                                <% } else { %>
+                                                    Product information not available x <%= item.quantity %> (₹<%= item.price %>)
+                                                <% } %>
                                             </small>
                                         </div>
                                     <% }) %>

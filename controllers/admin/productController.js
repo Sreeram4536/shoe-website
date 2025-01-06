@@ -247,6 +247,7 @@ const unblockProduct=async(req,res)=>{
 const getEditProduct = async (req, res) => {
     try {
         const id = req.query.id;
+        const listedCategories = await Category.find({isListed:true})
         const product = await Product.findOne({ _id: id });
         const category = await Category.find({});
         const brand = await Brand.find({});
@@ -254,6 +255,7 @@ const getEditProduct = async (req, res) => {
             product: product,
             cat: category,
             brand: brand,
+            listedCategories
         });
     } catch (error) {
         res.send("pageError");

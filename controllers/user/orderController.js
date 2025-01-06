@@ -125,11 +125,20 @@ const cancelOrder = async (req, res) => {
 const allOrdersPage = async (req, res) => {
     try {
         const userId = req.session.user;
-        
+        const page = parseInt(req.query.page) || 1; // Get the current page from query params
+        const limit = 10; // Number of orders per page
+        const skip = (page - 1) * limit; // Calculate how many orders to skip
+
         // Query orders based on the logged-in user and sort by invoiceDate in descending order
         const orders = await Order.find({ userId })
             .populate('orderedItems.product')
-            .sort({ invoiceDate: -1 });
+            .sort({ invoiceDate: -1 })
+            .skip(skip)
+            .limit(limit);
+
+        // Get total number of orders for pagination
+        const totalOrders = await Order.countDocuments({ userId });
+        const totalPages = Math.ceil(totalOrders / limit); // Calculate total pages
 
         // Set default message for no orders
         const message = orders.length === 0 ? 'No orders found.' : '';
@@ -137,6 +146,8 @@ const allOrdersPage = async (req, res) => {
         res.render('user/order-details', {
             orders: orders,
             message: message,
+            currentPage: page,
+            totalPages: totalPages,
             session: req.session,
         });
     } catch (error) {
@@ -607,7 +618,7 @@ const downloadInvoice = async (req, res) => {
 
         // ✅ TOTALS SECTION
         const gstAmount = order.totalPrice * 0.05;
-        const finalAmountWithGST = order.finalAmount + gstAmount;
+        const finalAmountWithGST = order.finalAmount;
 
         doc.font('Helvetica')
            .fontSize(10)

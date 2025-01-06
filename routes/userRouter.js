@@ -88,6 +88,7 @@ router.post("/user/resend-changepassword-otp", userAuth, profileController.resen
 router.post("/user/resend-email-otp", userAuth, profileController.resendEmailOtp);
 router.get("/user/new-email", userAuth, profileController.newEmailPage);
 router.post("/user/new-email", userAuth, profileController.updateNewEmail);
+router.get('/fetch-orders', userAuth,profileController.fetchOrders);
 
 /*************ADDRESS MANAGEMENT************ */
 

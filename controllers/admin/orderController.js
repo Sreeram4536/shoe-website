@@ -7,9 +7,14 @@ const listOrders = async (req, res) => {
     try {
         const orders = await Order.find()
             .populate('userId', 'name email')
-            .populate('orderedItems.product', 'productName salePrice')
+            .populate({
+                path: 'orderedItems.product',
+                select: 'productName salePrice'
+            })
             .populate('address')
             .sort({ createdOn: -1 });
+
+        // console.log('Fetched Orders:', JSON.stringify(orders, null, 2));
         res.render('admin/orderList', { orders });
     } catch (error) {
         console.error('Error fetching orders:', error);

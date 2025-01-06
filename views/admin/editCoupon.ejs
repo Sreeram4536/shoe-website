@@ -62,7 +62,7 @@
      <div class="row">
        <div class="col-md-3">
          <form id="coupon-form" method="post" action="/admin/updateCoupon">
-           <body onload="setDefaultStartDate(),setDefaultendDate()"></body>
+           <!-- <body onload="setDefaultStartDate()"></body> -->
            <input type="hidden" id="coupon-id" value="<%= findCoupon._id %>" />
            <div class="mb-4">
              <label for="coupon-name" class="form-label">Coupon Name</label>
@@ -78,7 +78,7 @@
            </div>
 
 
-           <div>
+           <!-- <div>
              <label for="startingDate" class="form-label">Start Date</label>
              <input
                type="date"
@@ -88,7 +88,21 @@
                id="startingDate"
              />
              <div id="error-start-date" class="error-message"></div>
-           </div>
+           </div> -->
+
+           <div>
+            <label for="startingDate" class="form-label">Start Date</label>
+            <input
+              type="date"
+              name="startDate"
+              class="form-control"
+              required="true"
+              id="startingDate"
+              value="<%= findCoupon.createdOn.toISOString().split('T')[0] %>"
+            />
+            <div id="error-start-date" class="error-message"></div>
+          </div>
+          
 
 
            <div>
@@ -99,6 +113,7 @@
                class="form-control"
                id="expiringDate"
                required="true"
+               value="<%= findCoupon.expiredOn.toISOString().split('T')[0] %>" 
              />
              <div id="error-end-date" class="error-message"></div>
            </div>
@@ -142,26 +157,26 @@
 </section>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
- function setDefaultStartDate() {
-   const today = new Date();
-   const year = today.getFullYear();
-   let month = (today.getMonth() + 1).toString().padStart(2, "0");
-   let day = today.getDate().toString().padStart(2, "0");
-   document.getElementById("startingDate").value = `${year}-${month}-${day}`;
- }
+//  function setDefaultStartDate() {
+//    const today = new Date();
+//    const year = today.getFullYear();
+//    let month = (today.getMonth() + 1).toString().padStart(2, "0");
+//    let day = today.getDate().toString().padStart(2, "0");
+//    document.getElementById("startingDate").value = `${year}-${month}-${day}`;
+//  }
 
 
- function setDefaultendDate() {
-   const today = new Date();
-   const tomorrow = new Date(today);
-   tomorrow.setDate(today.getDate() + 1);
+//  function setDefaultendDate() {
+//    const today = new Date();
+//    const tomorrow = new Date(today);
+//    tomorrow.setDate(today.getDate() + 1);
 
 
-   const year = tomorrow.getFullYear();
-   let month = (tomorrow.getMonth() + 1).toString().padStart(2, "0");
-   let day = tomorrow.getDate().toString().padStart(2, "0");
-   document.getElementById("expiringDate").value = `${year}-${month}-${day}`;
- }
+//    const year = tomorrow.getFullYear();
+//    let month = (tomorrow.getMonth() + 1).toString().padStart(2, "0");
+//    let day = tomorrow.getDate().toString().padStart(2, "0");
+//    document.getElementById("expiringDate").value = `${year}-${month}-${day}`;
+//  }
 
 
  document.getElementById("coupon-form").addEventListener("submit", function(event) {
@@ -190,10 +205,10 @@
    }
 
 
-   if (sDateObj <= todayDateObj) {
-     document.getElementById("error-start-date").innerHTML ="Starting date should be greater than or equal to today's date";
-     return false;
-   }
+  //  if (sDateObj <= todayDateObj) {
+  //    document.getElementById("error-start-date").innerHTML ="Starting date should be greater than or equal to today's date";
+  //    return false;
+  //  }
 
 
    let name = document.getElementsByName("couponName")[0].value;

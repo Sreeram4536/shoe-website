@@ -165,49 +165,55 @@ const postNewPassword = async(req,res)=>{
     }
 }
 
-const userProfile = async(req,res) => {
+const userProfile = async (req, res) => {
     try {
         const userId = req.session.user;
         const userData = await User.findById(userId);
-        const addressData = await Address.findOne({userId:userId});
-        
-        // Fetch wallet data
-        const walletData = await Wallet.findOne({ userId: req.session.user })
-            .sort({ 'transactions.createdAt': -1 });
-            console.log('Wallet Data:', walletData);
+        const addressData = await Address.findOne({ userId: userId });
+
+        // Pagination for orders
+        const ordersPage = parseInt(req.query.ordersPage) || 1; // Current orders page
+        const ordersLimit = 3; // Number of orders per page
+        const ordersSkip = (ordersPage - 1) * ordersLimit; // Calculate how many orders to skip
+
         const orders = await Order.find({ userId: req.session.user })
             .populate({
                 path: 'orderedItems.product',
                 select: 'productName productImage'
             })
-            .sort({ createdOn: -1 });
+            .skip(ordersSkip)
+            .limit(ordersLimit);
 
-        const userAddresses = await Address.findOne({ userId: req.session.user });
+        const totalOrders = await Order.countDocuments({ userId: req.session.user });
+        const totalPagesOrders = Math.ceil(totalOrders / ordersLimit);
 
-        const ordersWithAddress = orders.map(order => {
-            const orderObj = order.toObject();
-            if (userAddresses && userAddresses.address) {
-                const deliveryAddress = userAddresses.address.find(
-                    addr => addr._id.toString() === order.address.toString()
-                );
-                orderObj.deliveryAddress = deliveryAddress || null;
-            }
-            return orderObj;
-        });
+        // Pagination for wallet history
+        const walletPage = parseInt(req.query.walletPage) || 1; // Current wallet page
+        const walletLimit = 5; // Number of transactions per page
+        const walletSkip = (walletPage - 1) * walletLimit; // Calculate how many transactions to skip
+
+        const walletData = await Wallet.findOne({ userId: userId });
+        const transactions = walletData.transactions.slice(walletSkip, walletSkip + walletLimit);
+        const totalWalletPages = Math.ceil(walletData.transactions.length / walletLimit);
 
         res.render('user/profile', {
             user: userData,
             userAddress: addressData,
-            orders: ordersWithAddress,
+            orders: orders,
+            currentOrdersPage: ordersPage,
+            totalPagesOrders: totalPagesOrders,
             walletData: walletData || { transactions: [] },
-            session: req.session
+            currentWalletPage: walletPage,
+            totalWalletPages: totalWalletPages,
+            activeTab: req.query.tab || 'dashboard',
+            session:req.session,
+            limit:ordersLimit // Pass the active tab to the view
         });
-        
     } catch (error) {
-        console.error("Error for retrieve profile:", error);
-        res.redirect("/pageNotFound")
+        console.error("Error retrieving profile:", error);
+        res.redirect("/pageNotFound");
     }
-}
+};
 
 const changeEmail = async(req,res)=>{
     try {
@@ -724,6 +730,36 @@ const loadShop = async (req, res) => {
     }
 };
 
+const fetchOrders = async (req, res) => {
+    try {
+        const userId = req.session.user;
+        const page = parseInt(req.query.page) || 1; // Current page
+        const limit = 3; // Number of orders per page
+        const skip = (page - 1) * limit; // Calculate how many orders to skip
+
+        const orders = await Order.find({ userId: userId })
+            .populate({
+                path: 'orderedItems.product',
+                select: 'productName productImage'
+            })
+            .sort({ createdOn: -1 })
+            .skip(skip)
+            .limit(limit);
+
+        const totalOrders = await Order.countDocuments({ userId: userId }); // Total orders count
+        const totalPages = Math.ceil(totalOrders / limit); // Total pages
+
+        res.json({
+            orders: orders,
+            currentPage: page,
+            totalPages: totalPages
+        });
+    } catch (error) {
+        console.error("Error fetching orders:", error);
+        res.status(500).json({ success: false, message: "Error fetching orders" });
+    }
+}
+
 module.exports={
     getForgotPassPage,
     forgotEmailValid,
@@ -750,6 +786,7 @@ module.exports={
     resendEmailOtp,
     newEmailPage,
     updateNewEmail,
-    loadShop
+    loadShop,
+    fetchOrders
 
 }

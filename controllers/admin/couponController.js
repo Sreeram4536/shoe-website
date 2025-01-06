@@ -3,10 +3,22 @@ const mongoose = require("mongoose");
 
 const loadCoupon = async(req,res)=>{
     try {
-        const findCoupons = await Coupon.find({})
-        return res.render("admin/coupon",{coupons:findCoupons})
+        const page = parseInt(req.query.page) || 1;
+        const limit = 10;
+        const skip = (page - 1) * limit;
+
+        const coupons = await Coupon.find().skip(skip).limit(limit);
+        const totalCoupons = await Coupon.countDocuments();
+        const totalPages = Math.ceil(totalCoupons / limit);
+
+        res.render("admin/coupon", {
+            coupons,
+            currentPage: page,
+            totalPages: totalPages
+        });
     } catch (error) {
-        return res.redirect("/pageNotFound")
+        console.error(error);
+        res.redirect("/pageNotFound");
     }
 };
 
@@ -39,6 +51,8 @@ const editCoupon = async(req,res)=>{
     try {
         const id = req.query.id;
         const findCoupon = await Coupon.findOne({_id:id});
+        
+
         res.render("admin/editCoupon",{findCoupon:findCoupon})
     } catch (error) {
         res.redirect("/pageNotFound");
@@ -47,12 +61,14 @@ const editCoupon = async(req,res)=>{
 
 const updateCoupon = async(req,res)=>{
     try {
-        const couponId =req.body.couponId;
+        const couponId = req.body.couponId;
         const oid = new mongoose.Types.ObjectId(couponId);
         const selectedCoupon = await Coupon.findOne({_id:oid});
-        if(selectedCoupon){
-            const startDate = new Date(req.body.startDate + "T00:00:00");
-            const endDate = new Date(req.body.endDate + "T00:00:00");
+        
+        if(selectedCoupon) {
+            const startDate = new Date(req.body.startDate + "T00:00:00Z");
+            const endDate = new Date(req.body.endDate + "T00:00:00Z");
+            
             const updatedCoupon = await Coupon.updateOne({_id:oid},
                 {$set:{
                     name:req.body.couponName,
@@ -61,16 +77,16 @@ const updateCoupon = async(req,res)=>{
                     offerPrice:parseInt(req.body.offerPrice),
                     minimumPrice:parseInt(req.body.minimumPrice)
                 }
-            },{new:true}
-        );
-        if(updatedCoupon != null){
-            res.send("Coupon updated successfully");
-        }else{
-            res.status(500).send("Coupon update failed");
-        }
+            },{new:true});
             
+            if(updatedCoupon != null) {
+                res.send("Coupon updated successfully");
+            } else {
+                res.status(500).send("Coupon update failed");
+            }
         }
     } catch (error) {
+        console.error("Error updating coupon:", error);
         res.redirect("/pageNotFound");
     }
 };

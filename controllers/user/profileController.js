@@ -194,16 +194,26 @@ const userProfile = async (req, res) => {
         const walletSkip = (walletPage - 1) * walletLimit; // Calculate how many transactions to skip
 
         const walletData = await Wallet.findOne({ userId: userId });
-        const transactions = walletData.transactions.slice(walletSkip, walletSkip + walletLimit);
-        const totalWalletPages = Math.ceil(walletData.transactions.length / walletLimit);
+        // const transactions = walletData.transactions.slice(walletSkip, walletSkip + walletLimit);
+        // const totalWalletPages = Math.ceil(walletData.transactions.length / walletLimit);
+        const allTransactions = walletData?.transactions || [];
 
+const transactions = allTransactions.slice(
+    walletSkip,
+    walletSkip + walletLimit
+);
+
+const totalWalletPages = Math.ceil(
+    allTransactions.length / walletLimit
+) || 1;
         res.render('user/profile', {
             user: userData,
             userAddress: addressData,
             orders: orders,
             currentOrdersPage: ordersPage,
             totalPagesOrders: totalPagesOrders,
-            walletData: walletData || { transactions: [] },
+            // walletData: walletData || { transactions: [] },
+            walletData:transactions || [],
             currentWalletPage: walletPage,
             totalWalletPages: totalWalletPages,
             activeTab: req.query.tab || 'dashboard',

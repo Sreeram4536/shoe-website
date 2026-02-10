@@ -292,13 +292,7 @@ const getTopSellingCategories = async (req, res) => {
     res.json(topCategories);
 };
 
-const getTopSellingBrands = async (req, res) => {
-    const topBrands = await Brand.find()
-        .sort({ salesCount: -1 })
-        .limit(10)
-        .select('brandName salesCount');
-    res.json(topBrands);
-};
+
 
 const logout = async(req,res)=>{
     try {
@@ -331,5 +325,5 @@ module.exports={
     getSalesData,
     getTopSellingProducts,
     getTopSellingCategories,
-    getTopSellingBrands
+    
 }

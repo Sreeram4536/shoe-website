@@ -97,6 +97,6 @@ router.get('/dashboard', adminController.loadDashboard);
 router.get('/sales-data', adminController.getSalesData);
 router.get('/top-selling-products', adminController.getTopSellingProducts);
 router.get('/top-selling-categories', adminController.getTopSellingCategories);
-router.get('/top-selling-brands', adminController.getTopSellingBrands);
+
 
 module.exports=router;

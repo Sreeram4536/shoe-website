@@ -36,17 +36,6 @@ router.get("/user/filterPrice",userAuth,userController.filterByPrice);
 router.post("/user/search",userAuth,userController.searchProduct)
 router.get('/user/sort', userAuth, userController.sortProducts);
 
-/*CART MANAGEMENT*/
-// router.post('/user/cart/:productId', userAuth, cartController.addToCart);
-// router.get("/user/cart",userAuth,cartController.viewCart)
-// router.post('/user/cart/remove/:productId',userAuth,cartController.removeFromCart);
-// router.get('/user/checkout',userAuth,cartController.checkout)
-// router.post('/user/payment',userAuth,cartController.paymentPage); // Redirect to payment page
-// router.post('/user/place-order',userAuth,cartController.placeOrder); // Handle order placement
-// router.get('/user/order-success',userAuth,cartController.orderSuccess)
-// router.post('/user/cancel-order/:orderId', userAuth, cartController.cancelOrder);
-// router.get('/user/orders', userAuth, cartController.viewOrders);
-// router.post('/user/cart/update/:productId', userAuth, cartController.updateQuantity);
 
 
 router.post('/user/cart/add/:product_id', userAuth, cartController.addToCart); // Add product to cart

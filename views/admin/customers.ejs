@@ -1,4 +1,7 @@
 <%- include("../partials/admin/header") %>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10.16.6/dist/sweetalert2.min.js"></script>
+
 <div class="content-header row">
     <div class="d-flex justify-content-between align-items-center">
         <h2 class="content-title card-title">Customers</h2>
@@ -36,13 +39,11 @@
                                 <td><%=data[i].phone%></td>
                                 <td> 
                                     <%if(data[i].isBlocked===false){%>
-                                        <button class="btn btn-danger" style="width: 80px;">
-                                            <a href="/admin/blockCustomer?id=<%=data[i].id%>" class="text-white" style="text-decoration: none;">Block</a>
-                                        </button>
+                                        <button class="btn btn-danger" style="width: 80px;"
+                                            onclick="confirmBlock('<%=data[i].id%>')">Block</button>
                                         <%}else{%>
-                                        <button class="btn btn-success" style="width: 80px;">
-                                            <a href="/admin/unblockCustomer?id=<%=data[i].id%>" class="text-white" style="text-decoration: none;">Unblock</a>
-                                        </button> 
+                                        <button class="btn btn-success" style="width: 80px;"
+                                            onclick="confirmUnblock('<%=data[i].id%>')">Unblock</button>
                                         <%}%>
                                 </td>
                             </tr>
@@ -65,6 +66,42 @@
         <script>
             function clearSearch(){
                 window.location.href = '/admin/users';
+            }
+
+            function confirmBlock(userId) {
+                Swal.fire({
+                    title: 'Block Customer',
+                    text: 'Are you sure you want to block this customer?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Yes, Block!',
+                    timer: 5000,
+                    timerProgressBar: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = '/admin/blockCustomer?id=' + userId;
+                    }
+                });
+            }
+
+            function confirmUnblock(userId) {
+                Swal.fire({
+                    title: 'Unblock Customer',
+                    text: 'Are you sure you want to unblock this customer?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Yes, Unblock!',
+                    timer: 5000,
+                    timerProgressBar: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = '/admin/unblockCustomer?id=' + userId;
+                    }
+                });
             }
         </script>
         <%- include("../partials/admin/footer") %>

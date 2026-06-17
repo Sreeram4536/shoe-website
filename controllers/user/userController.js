@@ -36,8 +36,7 @@ const loadHomepage = async(req,res)=>{
         isBlocked:false,
         category:{$in:categories.map(category=>category._id)},quantity:{$gt:0}
        })
-        //  productData.sort((a,b)=>new Date(b.createdOn)-new Date(a.createdOn));
-        // Sort by the `createdAt` field and take the latest 4 products
+       
          productData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
          productData=productData.slice(0,4);
 
@@ -251,7 +250,7 @@ const login = async(req,res)=>{
         
         const passwordMatch = await bcrypt.compare(password,findUser.password);
         if(!passwordMatch){
-            return res.render('user/login',{maessage:"Incorrect password"})
+            return res.render('user/login',{message:"Incorrect password"})
         }
     
 

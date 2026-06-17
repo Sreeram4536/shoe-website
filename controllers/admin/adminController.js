@@ -24,17 +24,18 @@ const login = async(req,res)=>{
         const{email,password}=req.body;
         const admin= await User.findOne({email,isAdmin:true});
         if(admin){
-            const passwordMatch = bcrypt.compare(password,admin.password);
+            const passwordMatch = await bcrypt.compare(password,admin.password);
             if(passwordMatch){
                 // req.session.admin=true;
                 req.session.admin = admin._id; // Store the ObjectId, not a boolean
                 // console.log("Session admin set to:", req.session.admin);
                 return res.redirect("/admin")
             }else{
-              return res.redirect('/admin/login')  
+              return res.render('admin/admin-login',{message:"Invalid credentials"})  
             }
         }else{
-            return res.redirect("/admin/login")
+
+            return res.render("admin/admin-login",{message:"Admin not found.Try with another email"})
         }
 
     } catch (error) {

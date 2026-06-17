@@ -148,7 +148,8 @@ const viewCart = async (req, res) => {
     try {
         const cart = await Cart.findOne({ userId: req.session.user }).populate('items.productId','productName salePrice productImage quantity');
         if (!cart) {
-            return res.render('user/cart', { cart: null,session:req.session });
+            return res.render('user/cart', {  cart: { items: [] },
+    totalCartPrice: 0,session:req.session });
         }
 
         const totalCartPrice = cart.items.reduce((total, item) => total + item.totalPrice, 0);
